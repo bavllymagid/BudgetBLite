@@ -2,6 +2,7 @@ package com.budget.b.lite.controllers;
 
 import com.budget.b.lite.dto.LoginRequest;
 import com.budget.b.lite.dto.LoginResponse;
+import com.budget.b.lite.dto.RegisterRequest;
 import com.budget.b.lite.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,5 +19,10 @@ public class AuthController {
     @PostMapping("/login")
     ResponseEntity<LoginResponse> login(@RequestBody LoginRequest login){
         return ResponseEntity.ok(service.login(login));
+    }
+
+    @PostMapping("/register")
+    ResponseEntity<String> register(@RequestBody RegisterRequest request){
+        return ResponseEntity.ok(service.register(request));
     }
 }

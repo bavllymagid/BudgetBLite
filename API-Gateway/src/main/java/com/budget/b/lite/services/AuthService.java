@@ -2,6 +2,7 @@ package com.budget.b.lite.services;
 
 import com.budget.b.lite.dto.LoginRequest;
 import com.budget.b.lite.dto.LoginResponse;
+import com.budget.b.lite.dto.RegisterRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,9 +20,17 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request){
         return restTemplate.postForObject(
-                AUTH_URL+"/hello",
+                AUTH_URL+"/login",
                 request,
                 LoginResponse.class
+        );
+    }
+
+    public String register(RegisterRequest request){
+        return restTemplate.postForObject(
+                AUTH_URL+"/register",
+                request,
+                String.class
         );
     }
 }
