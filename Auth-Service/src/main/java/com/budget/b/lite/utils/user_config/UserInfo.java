@@ -31,4 +31,8 @@ public record UserInfo(User user) implements UserDetails {
         return user.getEmail();
     }
 
+    public User getUser(){
+        return user;
+    }
+
 }
