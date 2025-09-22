@@ -9,16 +9,18 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.bvm</groupId>
+    <groupId>com.budget.b.lite</groupId>
     <artifactId>BudgetBLite</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <modules>
         <module>Auth-Service</module>
         <module>Finance-Service</module>
         <module>Reporting-Service</module>
         <module>API-Gateway</module>
         <module>Service-Discovery</module>
+        <module>common</module>
     </modules>
 
     <properties>

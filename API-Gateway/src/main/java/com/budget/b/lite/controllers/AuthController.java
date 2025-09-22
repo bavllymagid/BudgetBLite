@@ -1,21 +1,22 @@
 package com.budget.b.lite.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import com.budget.b.lite.dto.LoginRequest;
+import com.budget.b.lite.dto.LoginResponse;
+import com.budget.b.lite.services.AuthService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/gateway")
+@RequestMapping("/api/auth")
 public class AuthController {
+    private final AuthService service;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    public AuthController(AuthService service){
+        this.service = service;
+    }
 
-    @GetMapping("/hello")
-    String hello(){
-        String url = "http://AUTH-SERVICE/hello";
-        return restTemplate.getForObject(url, String.class);
+    @PostMapping("/login")
+    ResponseEntity<LoginResponse> login(@RequestBody LoginRequest login){
+        return ResponseEntity.ok(service.login(login));
     }
 }
