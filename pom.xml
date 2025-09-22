@@ -18,6 +18,7 @@
         <module>Finance-Service</module>
         <module>Reporting-Service</module>
         <module>API-Gateway</module>
+        <module>Service-Discovery</module>
     </modules>
 
     <properties>
@@ -57,6 +58,15 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
 
     </dependencies>
 
