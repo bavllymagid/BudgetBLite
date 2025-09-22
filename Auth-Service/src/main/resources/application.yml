@@ -1,10 +1,14 @@
 spring:
   application:
     name: Auth-Service
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  datasource:
+    url: jdbc:postgresql://dpg-d35vr2qli9vc738ptucg-a.frankfurt-postgres.render.com/employees_db_54tp
+    username: bvm
+    password: gk7I712z3feW7jEUxghf4UQM4Z6otDID
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
   cloud:
     gateway:
       discovery:
@@ -14,6 +18,7 @@ spring:
 
 server:
   port: 8081
+
 
 eureka:
   client:
