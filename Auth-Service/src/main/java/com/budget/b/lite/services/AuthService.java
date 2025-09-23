@@ -114,4 +114,18 @@ public class AuthService {
         SecretKey key = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256);
         return Encoders.BASE64.encode(key.getEncoded());
     }
+
+    public void logout(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo user = (UserInfo) authentication.getPrincipal();
+        if(user == null) throw new UserNotFoundException("user Not found can't logout");
+
+        Optional<User> updateUser = userRepository.findByEmail(user.getEmail());
+        if(updateUser.isPresent()){
+            User newUser = updateUser.get();
+            newUser.setJwtSecret("");
+            userRepository.save(newUser);
+            refreshTokenService.deleteByEmail(user.getEmail());
+        }
+    }
 }

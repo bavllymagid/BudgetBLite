@@ -5,7 +5,6 @@ import com.budget.b.lite.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,5 +32,11 @@ public class AccountController {
     @GetMapping("/token/validate")
     public ResponseEntity<Boolean> validate(){
         return ResponseEntity.ok(true);
+    }
+
+    @GetMapping("/logout")
+    public ResponseEntity<String> logout(){
+        authService.logout();
+        return ResponseEntity.ok("User logged Out");
     }
 }
