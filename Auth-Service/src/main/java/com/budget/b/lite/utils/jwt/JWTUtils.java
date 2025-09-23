@@ -31,7 +31,7 @@ public class JWTUtils {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration.toMillis()))
-                .signWith(getSignInKey(userSecret), SignatureAlgorithm.RS256)
+                .signWith(getSignInKey(userSecret))
                 .compact();
     }
 

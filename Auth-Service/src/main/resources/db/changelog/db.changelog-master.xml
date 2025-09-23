@@ -41,9 +41,6 @@
             <column name="expiry_date" type="TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
-            <column name="secret" type="VARCHAR(512)">
-                <constraints nullable="false"/>
-            </column>
             <column name="user_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
