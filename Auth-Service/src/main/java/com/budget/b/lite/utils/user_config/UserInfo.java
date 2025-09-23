@@ -35,4 +35,8 @@ public record UserInfo(User user) implements UserDetails {
         return user;
     }
 
+    public void setJwtSecret(String jwt){
+        user.setJwtSecret(jwt);
+    }
+
 }

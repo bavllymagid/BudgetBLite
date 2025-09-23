@@ -35,10 +35,11 @@ public class User {
     private Timestamp updatedAt;
 
 
-    public User(String username, String email, String password) {
+    public User(String username, String email, String password, String jwtSecret) {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.jwtSecret = jwtSecret;
     }
 
     @PrePersist
@@ -52,4 +53,23 @@ public class User {
         updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
+    public void setJwtSecret(String jwtSecret) {
+        this.jwtSecret = jwtSecret;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getJwtSecret() {
+        return jwtSecret;
+    }
 }

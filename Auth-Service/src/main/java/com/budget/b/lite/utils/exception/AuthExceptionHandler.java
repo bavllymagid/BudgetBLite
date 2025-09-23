@@ -19,13 +19,13 @@ public class AuthExceptionHandler {
     }
 
     // ---- Token Exceptions ----
-    @ExceptionHandler({InvalidTokenException.class, ExpiredTokenException.class})
+    @ExceptionHandler({InvalidTokenException.class})
     public ResponseEntity<Object> handleTokenExceptions(RuntimeException ex) {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     // ---- User Management Exceptions ----
-    @ExceptionHandler({UserNotFoundException.class, UserAccessDeniedException.class})
+    @ExceptionHandler({UserNotFoundException.class})
     public ResponseEntity<Object> handleUserManagementExceptions(RuntimeException ex) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }

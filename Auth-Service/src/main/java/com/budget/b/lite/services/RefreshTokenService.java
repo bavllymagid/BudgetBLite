@@ -32,12 +32,9 @@ public class RefreshTokenService {
     public RefreshToken createRefreshToken(String email) {
         Duration duration = Duration.ofDays(3);
         UserInfo user = (UserInfo) userDetailsService.loadUserByUsername(email);
+        deleteByEmail(email);
         String token = jwtUtils.generateToken(user, duration);
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(token);
-        refreshToken.setExpiryDate(Timestamp.from(Instant.now().plus(duration)));
-        refreshToken.setUser(user.getUser());
-
+        RefreshToken refreshToken = new RefreshToken(user.getUser(), token, Timestamp.from(Instant.now().plus(duration)));
         return repository.save(refreshToken);
     }
 
@@ -45,10 +42,13 @@ public class RefreshTokenService {
         return repository.findByToken(token);
     }
 
-
-    public void deleteByUser(String email) {
-        repository.deleteByUserEmail(email);
+    public Optional<RefreshToken> findByUser(User user) {
+        return repository.findByUser(user);
     }
 
+
+    public void deleteByEmail(String email) {
+        repository.deleteByUserEmail(email);
+    }
 
 }

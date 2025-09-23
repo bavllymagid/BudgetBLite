@@ -1,6 +1,7 @@
 package com.budget.b.lite.config.jwt;
 
 import com.budget.b.lite.services.CustomUserDetailsService;
+import com.budget.b.lite.utils.exception.custom_exceptions.InvalidTokenException;
 import com.budget.b.lite.utils.jwt.JWTUtils;
 import com.budget.b.lite.utils.user_config.UserInfo;
 import jakarta.servlet.FilterChain;

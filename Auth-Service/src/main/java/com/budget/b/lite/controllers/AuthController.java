@@ -26,4 +26,11 @@ public class AuthController {
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/refresh")
+    public ResponseEntity<LoginResponse> login() {
+        LoginResponse response = authService.renewToken();
+        return ResponseEntity.ok(response);
+    }
+
 }

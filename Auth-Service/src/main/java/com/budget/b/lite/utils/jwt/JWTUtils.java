@@ -22,7 +22,7 @@ public class JWTUtils {
 
     private SecretKey getSignInKey(String userSecret) {
         byte[] keyBytes = Decoders.BASE64.decode(userSecret);
-        return Keys.secretKeyFor(SignatureAlgorithm.RS256);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     private String generateToken(String username, String userSecret, Map<String, Object> extraClaims) {

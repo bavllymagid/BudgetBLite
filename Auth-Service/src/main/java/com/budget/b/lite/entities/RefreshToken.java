@@ -2,6 +2,7 @@ package com.budget.b.lite.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
@@ -16,7 +17,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 512)
+    @Column(nullable = false, unique = true)
     private String token;
 
     @OneToOne
@@ -41,5 +42,12 @@ public class RefreshToken {
         createdAt = new Timestamp(System.currentTimeMillis());
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public User getUser() {
+        return user;
+    }
 }
 
