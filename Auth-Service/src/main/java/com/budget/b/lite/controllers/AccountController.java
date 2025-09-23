@@ -30,7 +30,7 @@ public class AccountController {
         return ResponseEntity.ok("User deleted successfully");
     }
 
-    @GetMapping("validate")
+    @GetMapping("/token/validate")
     public ResponseEntity<Boolean> validate(){
         return ResponseEntity.ok(true);
     }

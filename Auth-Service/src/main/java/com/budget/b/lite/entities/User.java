@@ -1,7 +1,6 @@
 package com.budget.b.lite.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -53,23 +52,4 @@ public class User {
         updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
-    public void setJwtSecret(String jwtSecret) {
-        this.jwtSecret = jwtSecret;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getJwtSecret() {
-        return jwtSecret;
-    }
 }

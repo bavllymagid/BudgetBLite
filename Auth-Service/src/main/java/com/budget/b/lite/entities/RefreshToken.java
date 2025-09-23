@@ -2,7 +2,6 @@ package com.budget.b.lite.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
@@ -21,7 +20,7 @@ public class RefreshToken {
     private String token;
 
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_email", referencedColumnName = "email", nullable = false)
     private User user;
 
     @Column(name = "expiry_date", nullable = false)
@@ -42,12 +41,5 @@ public class RefreshToken {
         createdAt = new Timestamp(System.currentTimeMillis());
     }
 
-    public String getToken() {
-        return token;
-    }
-
-    public User getUser() {
-        return user;
-    }
 }
 

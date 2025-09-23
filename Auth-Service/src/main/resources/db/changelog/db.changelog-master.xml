@@ -41,7 +41,7 @@
             <column name="expiry_date" type="TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
-            <column name="user_id" type="BIGINT">
+            <column name="user_email" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="created_at" type="TIMESTAMP">
@@ -51,9 +51,9 @@
 
         <addForeignKeyConstraint
                 baseTableName="refresh_tokens"
-                baseColumnNames="user_id"
+                baseColumnNames="user_email"
                 referencedTableName="users"
-                referencedColumnNames="id"
+                referencedColumnNames="email"
                 constraintName="fk_refresh_tokens_user"
                 onDelete="CASCADE"/>
     </changeSet>

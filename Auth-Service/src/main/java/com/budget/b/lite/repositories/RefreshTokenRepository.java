@@ -16,6 +16,5 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     Optional<RefreshToken> findByUser(User user);
 
     @Transactional
-    @Query("select rt from RefreshToken rt join fetch rt.user u where u.email = :email")
     void deleteByUserEmail(String email);
 }
