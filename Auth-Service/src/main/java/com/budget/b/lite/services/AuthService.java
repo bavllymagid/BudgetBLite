@@ -56,7 +56,7 @@ public class AuthService {
         User user = new User(request.username(),
                 request.email(),
                 passwordEncoder.encode(request.password()),
-                generateSecret());
+                "");
 
         userRepository.save(user);
 
@@ -68,17 +68,18 @@ public class AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.email(), user.password())
             );
-
             UserInfo userDetails = (UserInfo) authentication.getPrincipal();
-            String jwt = jwtUtils.generateToken(userDetails, Duration.ofHours(1));
-
             Optional<User> updateUser = userRepository.findByEmail(userDetails.getEmail());
+            String secret = generateSecret();
+
             if(updateUser.isPresent()){
-                updateUser.get().setJwtSecret(generateSecret());
+                updateUser.get().setJwtSecret(secret);
                 userRepository.save(updateUser.get());
             }else throw new UserNotFoundException("user Not found with this credentials");
+            userDetails.setJwtSecret(secret);
+            String jwt = jwtUtils.generateToken(userDetails, Duration.ofHours(1));
 
-            return new LoginResponse(jwt, refreshTokenService.createRefreshToken(userDetails.getEmail()).getToken(), userDetails.getUsername());
+            return new LoginResponse(jwt, refreshTokenService.createRefreshToken(userDetails.getEmail()).getToken(), userDetails.getEmail());
          }catch (BadCredentialsException e){
             throw new InvalidCredentialsException("Invalid credentials: " + e);
         }
@@ -96,10 +97,17 @@ public class AuthService {
             user.setJwtSecret(secret);
             String jwt = jwtUtils.generateToken(user, Duration.ofHours(1));
             userRepository.save(newUser);
-            return new LoginResponse(jwt, refreshTokenService.findByUser(newUser).get().getToken(), user.getUsername());
+            return new LoginResponse(jwt, refreshTokenService.findByUser(newUser).get().getToken(), user.getEmail());
         }
 
         throw new UserNotFoundException("user Not found with this credentials");
+    }
+
+    public void deleteUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo user = (UserInfo) authentication.getPrincipal();
+        if(user == null) throw new UserNotFoundException("user Not found can't delete");
+        userRepository.deleteByEmail(user.getEmail());
     }
 
     private String generateSecret(){
