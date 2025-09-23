@@ -3,6 +3,7 @@ package com.budget.b.lite.controllers;
 import com.budget.b.lite.dto.LoginResponse;
 import com.budget.b.lite.services.AuthService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +24,7 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/delete")
+    @DeleteMapping("/delete")
     public ResponseEntity<String> delete(){
         authService.deleteUser();
         return ResponseEntity.ok("User deleted successfully");

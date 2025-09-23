@@ -2,7 +2,7 @@ package com.budget.b.lite.config.jwt;
 
 import com.budget.b.lite.services.CustomUserDetailsService;
 import com.budget.b.lite.services.RefreshTokenService;
-import com.budget.b.lite.utils.exception.custom_exceptions.InvalidTokenException;
+import com.budget.b.lite.exception_handling.custom_exceptions.InvalidTokenException;
 import com.budget.b.lite.utils.jwt.JWTUtils;
 import com.budget.b.lite.utils.user_config.UserInfo;
 import jakarta.servlet.FilterChain;
@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -63,6 +62,9 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
                         if("/api/acc/token/refresh".equals(path) && !checkRefresh(token))
                             throw new InvalidTokenException("That's not a refresh token");
+                        else {
+                            if(checkRefresh(token)) throw new InvalidTokenException("That's not an access token");
+                        }
 
 
                         UsernamePasswordAuthenticationToken authentication =

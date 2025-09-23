@@ -1,6 +1,9 @@
-package com.budget.b.lite.utils.exception;
+package com.budget.b.lite.exception_handling;
 
-import com.budget.b.lite.utils.exception.custom_exceptions.*;
+import com.budget.b.lite.exception_handling.custom_exceptions.InvalidCredentialsException;
+import com.budget.b.lite.exception_handling.custom_exceptions.InvalidTokenException;
+import com.budget.b.lite.exception_handling.custom_exceptions.UserAlreadyExistsException;
+import com.budget.b.lite.exception_handling.custom_exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

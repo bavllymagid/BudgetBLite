@@ -22,7 +22,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     RestTemplate restTemplate;
-    @Value("${user.auth}")
+    @Value("${user.acc}")
     String authURL;
 
     @Override
@@ -39,7 +39,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             token = requestTokenHeader.substring(7);
-            String url = authURL+"validate-token?token={token}";
+            String url = authURL+"/token/validate";
             Boolean valid = restTemplate.getForObject(url, Boolean.class, token);
             if(Boolean.FALSE.equals(valid)) throw new ServletException("invalid token");
         } else {
