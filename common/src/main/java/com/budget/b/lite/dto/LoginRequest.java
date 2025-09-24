@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record LoginRequest(@NotBlank(message = "Email is required")
-                           @Email(message = "Invalid email format")
+                           @Email(message = "Invalid email format",
+                                   regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
                            String email,
                            @NotBlank(message = "Password is required")
                            @Size(min = 8, max = 50, message = "Password must be between 8 and 50 characters")
