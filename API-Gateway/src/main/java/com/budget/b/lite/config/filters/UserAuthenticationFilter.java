@@ -1,5 +1,6 @@
 package com.budget.b.lite.config.filters;
 
+import com.budget.b.lite.services.RoutingService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,11 +23,13 @@ import java.io.IOException;
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private final Logger log = LoggerFactory.getLogger(UserAuthenticationFilter.class.getCanonicalName());
-
-    @Autowired
-    RestTemplate restTemplate;
+    private final RoutingService service;
     @Value("${user.acc:http://AUTH-SERVICE}")
     String authURL;
+
+    public UserAuthenticationFilter(RoutingService service){
+        this.service = service;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -54,26 +57,31 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
                 if("/api/acc/token/refresh".equals(path)) url = refreshUrl;
 
-                ResponseEntity<Object> validationResponse = restTemplate.exchange(
-                        url,
-                        HttpMethod.GET,
-                        entity,
-                        Object.class
-                );
+                ResponseEntity<String> validationResponse = service.forward(url, HttpMethod.GET, null);
 
                 int valid = validationResponse.getStatusCode().value();
 
                 if (valid < 200 || valid > 299) {
-                    throw new ServletException("Invalid token");
+                    log.warn("Token rejected by Auth Service");
+                    sendUnauthorized(response, validationResponse.getBody());
+                    return;
                 }
             } catch (Exception e) {
                 log.error("Token validation failed", e);
-                throw new ServletException("Token validation failed: " + e.getMessage());
+                sendUnauthorized(response, "{error : " + e.getMessage() + " }");
+                return;
             }
         } else {
-            throw new ServletException("Invalid token type");
+            sendUnauthorized(response, "{error : Missing or invalid Authorization header }");
+            return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write(message);
     }
 }

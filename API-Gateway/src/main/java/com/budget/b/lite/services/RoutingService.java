@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -18,7 +20,8 @@ public class RoutingService {
     // Use the load-balanced RestTemplate from your config
     public RoutingService(@LoadBalanced RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.restTemplate.setErrorHandler((response) -> false);
+        // Remove the custom error handler to let Spring handle HTTP errors properly
+        // this.restTemplate.setErrorHandler((response) -> false);
     }
 
     public <T> ResponseEntity<String> forward(String path, HttpMethod method, T body) {
@@ -39,6 +42,11 @@ public class RoutingService {
                 }
             }
 
+            // Explicitly remove problematic headers that can cause chunking issues
+            headers.remove("Transfer-Encoding");
+            headers.remove("Connection");
+            headers.remove("Content-Length"); // Let RestTemplate calculate this
+
             HttpEntity<T> entity = new HttpEntity<>(body, headers);
 
             return restTemplate.exchange(
@@ -47,12 +55,35 @@ public class RoutingService {
                     entity,
                     String.class
             );
+
+        } catch (HttpClientErrorException e) {
+            // Handle 4xx errors (like 400 Bad Request) - preserve the original response
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(responseHeaders)
+                    .body(e.getResponseBodyAsString());
+
+        } catch (HttpServerErrorException e) {
+            // Handle 5xx errors - preserve the original response
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(responseHeaders)
+                    .body(e.getResponseBodyAsString());
+
         } catch (Exception e) {
             // Log the error and return a meaningful response
             System.err.println("Error forwarding request to: " + path + " - " + e.getMessage());
             e.printStackTrace();
 
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .headers(responseHeaders)
                     .body("{\"error\":\"Service temporarily unavailable\",\"message\":\"" + e.getMessage() + "\"}");
         }
     }
@@ -89,6 +120,8 @@ public class RoutingService {
                 lowerCaseHeaderName.equals("content-length") ||
                 lowerCaseHeaderName.equals("connection") ||
                 lowerCaseHeaderName.equals("transfer-encoding") ||
-                lowerCaseHeaderName.equals("upgrade");
+                lowerCaseHeaderName.equals("upgrade") ||
+                lowerCaseHeaderName.equals("te") ||
+                lowerCaseHeaderName.equals("proxy-connection");
     }
 }

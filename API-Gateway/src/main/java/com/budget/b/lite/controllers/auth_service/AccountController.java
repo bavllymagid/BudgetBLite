@@ -51,15 +51,4 @@ public class AccountController {
         String url = accountServiceUrl + "/api/acc/logout";
         return routingService.forward(url, HttpMethod.GET, null);
     }
-
-    // Generic forwarding method for any additional endpoints
-    @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH})
-    public ResponseEntity<String> forwardAllRequests(HttpServletRequest request, @RequestBody(required = false) String requestBody) throws IOException {
-        String path = request.getServletPath();
-        String url = accountServiceUrl + path;
-
-        HttpMethod method = HttpMethod.valueOf(request.getMethod());
-
-        return routingService.forward(url, method, requestBody);
-    }
 }

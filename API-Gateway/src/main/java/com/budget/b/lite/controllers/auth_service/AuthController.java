@@ -42,14 +42,4 @@ public class AuthController {
         return routingService.forward(url, HttpMethod.POST, request);
     }
 
-    // Generic forwarding method for any additional auth endpoints
-    @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH})
-    public ResponseEntity<String> forwardAllRequests(HttpServletRequest request, @RequestBody(required = false) String requestBody) throws IOException {
-        String path = request.getServletPath();
-        String url = authServiceUrl + path;
-
-        HttpMethod method = HttpMethod.valueOf(request.getMethod());
-
-        return routingService.forward(url, method, requestBody);
-    }
 }
