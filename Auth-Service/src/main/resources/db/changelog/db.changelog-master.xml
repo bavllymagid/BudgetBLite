@@ -47,6 +47,9 @@
             <column name="created_at" type="TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
+            <column name="secret" type="VARCHAR(512)">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
 
         <addForeignKeyConstraint

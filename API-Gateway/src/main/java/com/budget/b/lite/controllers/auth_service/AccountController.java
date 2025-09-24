@@ -1,12 +1,13 @@
 package com.budget.b.lite.controllers.auth_service;
 
 import com.budget.b.lite.services.RoutingService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/acc")
@@ -15,7 +16,7 @@ public class AccountController {
     private final String accountServiceUrl;
 
     public AccountController(RoutingService routingService,
-                             @Value("${services.account.name:ACCOUNT-SERVICE}") String accountServiceName,
+                             @Value("${services.account.name:AUTH-SERVICE}") String accountServiceName,
                              @Value("${services.account.url:}") String directUrl) {
         this.routingService = routingService;
 
@@ -29,25 +30,36 @@ public class AccountController {
 
     @GetMapping("/token/refresh")
     public ResponseEntity<String> refresh() {
-        String url = accountServiceUrl + "/token/refresh";
+        String url = accountServiceUrl + "/api/acc/token/refresh";
         return routingService.forward(url, HttpMethod.GET, null);
     }
 
-    @GetMapping("/delete")
+    @DeleteMapping("/delete")
     public ResponseEntity<String> delete() {
-        String url = accountServiceUrl + "/delete";
-        return routingService.forward(url, HttpMethod.GET, null);
+        String url = accountServiceUrl + "/api/acc/delete";
+        return routingService.forward(url, HttpMethod.DELETE, null);
     }
 
     @GetMapping("/token/validate")
     public ResponseEntity<String> validate() {
-        String url = accountServiceUrl + "/token/validate";
+        String url = accountServiceUrl + "/api/acc/token/validate";
         return routingService.forward(url, HttpMethod.GET, null);
     }
 
     @GetMapping("/logout")
     public ResponseEntity<String> logout() {
-        String url = accountServiceUrl + "/logout";
+        String url = accountServiceUrl + "/api/acc/logout";
         return routingService.forward(url, HttpMethod.GET, null);
+    }
+
+    // Generic forwarding method for any additional endpoints
+    @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH})
+    public ResponseEntity<String> forwardAllRequests(HttpServletRequest request, @RequestBody(required = false) String requestBody) throws IOException {
+        String path = request.getServletPath();
+        String url = accountServiceUrl + path;
+
+        HttpMethod method = HttpMethod.valueOf(request.getMethod());
+
+        return routingService.forward(url, method, requestBody);
     }
 }

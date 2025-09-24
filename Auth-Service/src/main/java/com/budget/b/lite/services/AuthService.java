@@ -77,7 +77,7 @@ public class AuthService {
                 userRepository.save(updateUser.get());
             }else throw new UserNotFoundException("user Not found with this credentials");
             userDetails.setJwtSecret(secret);
-            String jwt = jwtUtils.generateToken(userDetails, Duration.ofHours(1));
+            String jwt = jwtUtils.generateToken(userDetails.getJwtSecret(), userDetails.getEmail(), Duration.ofHours(1));
 
             return new LoginResponse(jwt, refreshTokenService.createRefreshToken(userDetails.getEmail()).getToken(), userDetails.getEmail());
          }catch (BadCredentialsException e){
@@ -95,7 +95,7 @@ public class AuthService {
             String secret = generateSecret();
             newUser.setJwtSecret(secret);
             user.setJwtSecret(secret);
-            String jwt = jwtUtils.generateToken(user, Duration.ofHours(1));
+            String jwt = jwtUtils.generateToken(user.getJwtSecret(), user.getEmail(), Duration.ofHours(1));
             userRepository.save(newUser);
             return new LoginResponse(jwt, refreshTokenService.findByUser(newUser).get().getToken(), user.getEmail());
         }

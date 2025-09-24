@@ -18,6 +18,10 @@ spring:
 server:
   port: 8080
 
+# Service URLs - Add the user.acc property for the authentication filter
+user:
+  acc: http://AUTH-SERVICE
+
 # Fixed service URLs (removed trailing slashes and fixed spacing)
 services:
   auth:
@@ -43,3 +47,4 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     com.netflix.discovery: DEBUG
     com.budget.b.lite: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG

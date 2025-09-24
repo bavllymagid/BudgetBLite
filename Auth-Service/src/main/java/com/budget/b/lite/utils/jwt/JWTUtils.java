@@ -35,9 +35,9 @@ public class JWTUtils {
                 .compact();
     }
 
-    public String generateToken(UserInfo userInfo, Duration expiration) {
+    public String generateToken(String secret, String email, Duration expiration) {
         this.expiration = expiration;
-        return generateToken(userInfo.getEmail(), userInfo.getJwtSecret(), Map.of());
+        return generateToken(email, secret, Map.of());
     }
 
     public <T> T extractClaim(String token, String userSecret, Function<Claims, T> resolver) {

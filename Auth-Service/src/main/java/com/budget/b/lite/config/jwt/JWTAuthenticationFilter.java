@@ -1,5 +1,6 @@
 package com.budget.b.lite.config.jwt;
 
+import com.budget.b.lite.entities.RefreshToken;
 import com.budget.b.lite.services.CustomUserDetailsService;
 import com.budget.b.lite.services.RefreshTokenService;
 import com.budget.b.lite.exception_handling.custom_exceptions.InvalidTokenException;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
@@ -56,16 +58,21 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
                 if (email != null) {
                     UserInfo userDetails = (UserInfo) userDetailsService.loadUserByUsername(email);
+                    String secret = userDetails.getJwtSecret();
+                    String path = request.getServletPath();
+                    Optional<RefreshToken> possibleRefresh = checkRefresh(token);
 
-                    if (jwtUtils.isTokenValid(token, email, userDetails.getJwtSecret())) {
-                        String path = request.getServletPath();
+                    if("/api/acc/token/refresh".equals(path) && possibleRefresh.isEmpty())
+                        throw new InvalidTokenException("That's not a refresh token");
+                    else if(!"/api/acc/token/refresh".equals(path)) {
+                        if(possibleRefresh.isPresent()) throw new InvalidTokenException("That's not an access token");
+                    }
 
-                        if("/api/acc/token/refresh".equals(path) && !checkRefresh(token))
-                            throw new InvalidTokenException("That's not a refresh token");
-                        else {
-                            if(checkRefresh(token)) throw new InvalidTokenException("That's not an access token");
-                        }
+                    if("/api/acc/token/refresh".equals(path)){
+                        secret = possibleRefresh.get().getSecret();
+                    }
 
+                    if (jwtUtils.isTokenValid(token, email, secret)) {
 
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
@@ -94,7 +101,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private boolean checkRefresh(String token){
-        return service.findByToken(token).isPresent();
+    private Optional<RefreshToken> checkRefresh(String token){
+        return service.findByToken(token);
     }
 }

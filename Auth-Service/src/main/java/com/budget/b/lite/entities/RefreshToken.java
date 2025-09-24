@@ -19,9 +19,13 @@ public class RefreshToken {
     @Column(nullable = false, unique = true)
     private String token;
 
+    @Column(nullable = false)
+    private String secret;
+
     @OneToOne
     @JoinColumn(name = "user_email", referencedColumnName = "email", nullable = false)
     private User user;
+
 
     @Column(name = "expiry_date", nullable = false)
     private Timestamp expiryDate;
@@ -30,10 +34,11 @@ public class RefreshToken {
     private Timestamp createdAt;
 
 
-    public RefreshToken(User user, String token, Timestamp expiryDate) {
+    public RefreshToken(User user, String token, String secret, Timestamp expiryDate) {
         this.user = user;
         this.token = token;
         this.expiryDate = expiryDate;
+        this.secret = secret;
     }
 
     @PrePersist
