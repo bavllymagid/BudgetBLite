@@ -68,11 +68,11 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (Exception e) {
                 log.error("Token validation failed", e);
-                sendUnauthorized(response, "{error : " + e.getMessage() + " }");
+                sendUnauthorized(response, "{ \"error\" : \""+ e.getMessage() + "\" }");
                 return;
             }
         } else {
-            sendUnauthorized(response, "{error : Missing or invalid Authorization header }");
+            sendUnauthorized(response, "{ \"error\" : \"Missing or invalid Authorization header\" }");
             return;
         }
 
