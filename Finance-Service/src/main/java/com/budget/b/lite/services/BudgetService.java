@@ -1,5 +1,6 @@
 package com.budget.b.lite.services;
 
+import com.budget.b.lite.utils.dto.ExpensesDTO;
 import com.budget.b.lite.utils.dto.ExpensesRequest;
 import com.budget.b.lite.utils.dto.IncomeRequest;
 import com.budget.b.lite.entities.Category;
@@ -7,11 +8,12 @@ import com.budget.b.lite.entities.Expenses;
 import com.budget.b.lite.entities.Income;
 import com.budget.b.lite.repositories.ExpensesRepository;
 import com.budget.b.lite.repositories.IncomeRepository;
-import com.budget.b.lite.utils.exceptions.NoExpenseFoundException;
-import com.budget.b.lite.utils.exceptions.NoIncomeFoundException;
+import com.budget.b.lite.utils.exceptions.custom_exceptions.NoExpenseFoundException;
+import com.budget.b.lite.utils.exceptions.custom_exceptions.NoIncomeFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,10 +23,14 @@ public class BudgetService {
 
     private final ExpensesRepository expensesRepository;
     private final IncomeRepository incomeRepository;
+    private final CategoryService categoryService;
 
-    public BudgetService(ExpensesRepository expensesRepository, IncomeRepository incomeRepository) {
+    public BudgetService(ExpensesRepository expensesRepository,
+                         IncomeRepository incomeRepository,
+                         CategoryService categoryService) {
         this.expensesRepository = expensesRepository;
         this.incomeRepository = incomeRepository;
+        this.categoryService = categoryService;
     }
 
     public Income addIncome(IncomeRequest request){
@@ -43,12 +49,12 @@ public class BudgetService {
        return expensesRepository.save(new Expenses(request.userEmail(),
                 request.amount(),
                 LocalDate.now(),
-                new Category(request.categoryName())));
+                categoryService.getCategoryById(request.categoryId())));
     }
 
-    public Page<Expenses> getUserExpenses(String email, int page, int size) {
+    public Page<ExpensesDTO> getUserExpenses(String email, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return expensesRepository.findByUserEmail(email, pageable);
+        return expensesRepository.findByUserEmailOrderByDateDesc(email, pageable).map(this::mapToDTO);
     }
 
     public Income getUserIncome(String email){
@@ -62,8 +68,8 @@ public class BudgetService {
                         expense.setUserEmail(request.userEmail());
                     if(request.amount() != null)
                         expense.setAmount(request.amount());
-                    if(request.categoryName() != null && !request.categoryName().isEmpty())
-                        expense.setCategory(new Category(request.categoryName()));
+                    if(request.categoryId() != null)
+                        expense.setCategory(categoryService.getCategoryById(request.categoryId()));
                     expense.setDate(LocalDate.now());
 
                     return expensesRepository.save(expense);
@@ -73,5 +79,15 @@ public class BudgetService {
 
     public void deleteExpenseById(Long expenseId){
         expensesRepository.deleteById(expenseId);
+    }
+
+    private ExpensesDTO mapToDTO(Expenses expense) {
+        return new ExpensesDTO(
+                expense.getId(),
+                expense.getUserEmail(),
+                expense.getAmount(),
+                expense.getDate(),
+                expense.getCategory() != null ? expense.getCategory().getName() : null
+        );
     }
 }

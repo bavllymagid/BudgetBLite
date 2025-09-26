@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ExpensesRepository extends JpaRepository<Expenses, Long> {
-    Page<Expenses> findByUserEmail(String email, Pageable pageable);
+    Page<Expenses> findByUserEmailOrderByDateDesc(String email, Pageable pageable);
 }

@@ -1,10 +1,11 @@
 package com.budget.b.lite.utils.dto;
 
 import com.budget.b.lite.entities.Category;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
-public record ExpensesRequest(String userEmail, BigDecimal amount, String categoryName) {
+public record ExpensesRequest(String userEmail, BigDecimal amount,
+                              @JsonProperty("category_id")
+                              Long categoryId) {
 }

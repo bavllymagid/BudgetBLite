@@ -3,6 +3,7 @@ package com.budget.b.lite.controllers;
 import com.budget.b.lite.entities.Expenses;
 import com.budget.b.lite.entities.Income;
 import com.budget.b.lite.services.BudgetService;
+import com.budget.b.lite.utils.dto.ExpensesDTO;
 import com.budget.b.lite.utils.dto.ExpensesRequest;
 import com.budget.b.lite.utils.dto.IncomeRequest;
 import org.springframework.data.domain.Page;
@@ -40,7 +41,7 @@ public class BudgetController {
     }
 
     @GetMapping("/expenses/{email}")
-    public ResponseEntity<Page<Expenses>> getUserExpenses(
+    public ResponseEntity<Page<ExpensesDTO>> getUserExpenses(
             @PathVariable String email,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
