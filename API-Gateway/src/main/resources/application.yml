@@ -26,10 +26,11 @@ user:
 services:
   auth:
     name: AUTH-SERVICE
-    url: http://AUTH-SERVICE  # For direct URL fallback
-  account:
-    name: AUTH-SERVICE  # Both auth and account are on AUTH-SERVICE
     url: http://AUTH-SERVICE
+  finance:
+    name: FINANCE-SERVICE
+    url: http://FINANCE-SERVICE
+
 
 eureka:
   client:

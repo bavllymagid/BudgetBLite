@@ -16,16 +16,9 @@ public class AccountController {
     private final String accountServiceUrl;
 
     public AccountController(RoutingService routingService,
-                             @Value("${services.account.name:AUTH-SERVICE}") String accountServiceName,
-                             @Value("${services.account.url:}") String directUrl) {
+                             @Value("${services.auth.url:}") String directUrl) {
         this.routingService = routingService;
-
-        // Use direct URL if provided, otherwise use service name for discovery
-        if (!directUrl.isEmpty()) {
-            this.accountServiceUrl = directUrl;
-        } else {
-            this.accountServiceUrl = "http://" + accountServiceName;
-        }
+        this.accountServiceUrl = directUrl;
     }
 
     @GetMapping("/token/refresh")

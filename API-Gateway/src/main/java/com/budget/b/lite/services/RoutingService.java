@@ -1,7 +1,7 @@
 package com.budget.b.lite.services;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -13,6 +13,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Enumeration;
 
+@Slf4j
 @Service
 public class RoutingService {
     private final RestTemplate restTemplate;
@@ -76,8 +77,7 @@ public class RoutingService {
 
         } catch (Exception e) {
             // Log the error and return a meaningful response
-            System.err.println("Error forwarding request to: " + path + " - " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error forwarding request to: {} - {}", path, e.getMessage());
 
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setContentType(MediaType.APPLICATION_JSON);

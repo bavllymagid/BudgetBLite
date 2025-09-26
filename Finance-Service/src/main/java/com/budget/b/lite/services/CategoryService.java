@@ -32,14 +32,13 @@ public class CategoryService {
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found: " + id));
     }
 
-    // Delete category by name
+
     @Transactional
-    public void deleteCategory(String name) {
-        name = name.toUpperCase();
-        if (!repository.existsByName(name)) {
-            throw new CategoryNotFoundException("Category not found: " + name);
+    public void deleteCategory(Long id) {
+        if (!repository.existsById(id)) {
+            throw new CategoryNotFoundException("Category not found: " + id);
         }
-        repository.deleteByName(name);
+        repository.deleteById(id);
     }
 
     public List<Category> getAllCategories() {

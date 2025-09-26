@@ -18,16 +18,9 @@ public class AuthController {
     private final String authServiceUrl;
 
     public AuthController(RoutingService routingService,
-                          @Value("${services.auth.name:AUTH-SERVICE}") String authServiceName,
                           @Value("${services.auth.url:}") String directUrl) {
         this.routingService = routingService;
-
-        // Use direct URL if provided, otherwise use service name for discovery
-        if (!directUrl.isEmpty()) {
-            this.authServiceUrl = directUrl;
-        } else {
-            this.authServiceUrl = "http://" + authServiceName;
-        }
+        this.authServiceUrl = directUrl;
     }
 
     @PostMapping("/login")
