@@ -36,7 +36,7 @@ public class BudgetController {
     // ---------- EXPENSES ----------
 
     @PostMapping("/expenses")
-    public ResponseEntity<Expenses> addExpense(@RequestBody ExpensesRequest request) {
+    public ResponseEntity<ExpensesDTO> addExpense(@RequestBody ExpensesRequest request) {
         return ResponseEntity.ok(service.addExpenses(request));
     }
 
@@ -50,7 +50,7 @@ public class BudgetController {
     }
 
     @PutMapping("/expenses/{id}")
-    public ResponseEntity<Expenses> updateExpense(
+    public ResponseEntity<ExpensesDTO> updateExpense(
             @PathVariable("id") Long expenseId,
             @RequestBody ExpensesRequest request
     ) {
@@ -58,9 +58,9 @@ public class BudgetController {
     }
 
     @DeleteMapping("/expenses/{id}")
-    public ResponseEntity<Void> deleteExpense(@PathVariable("id") Long expenseId) {
+    public ResponseEntity<String> deleteExpense(@PathVariable("id") Long expenseId) {
         service.deleteExpenseById(expenseId);
-        return ResponseEntity.noContent().build(); // 204
+        return ResponseEntity.ok("User deleted signal sent");
     }
 
 }

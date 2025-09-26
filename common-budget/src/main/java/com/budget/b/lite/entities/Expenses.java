@@ -38,6 +38,9 @@ public class Expenses {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
+    @Column(name = "deleted")
+    private boolean isDeleted;
+
     @PrePersist
     private void setTime(){
         createdAt = new Timestamp(System.currentTimeMillis());

@@ -64,6 +64,7 @@
                 <constraints nullable="false"/>
             </column>
 
+            <column name="deleted" type="BOOLEAN" defaultValue="FALSE"/>
             <column name="created_at" type="TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP"/>
         </createTable>

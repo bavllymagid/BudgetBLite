@@ -9,9 +9,12 @@ import java.time.LocalDateTime;
 @Data
 public class FinanceEvent {
     private String userId;
+    private Long expenseId;
     private EntityType entityType;
     private EventAction action;
     private LocalDateTime timestamp;
+
+    private ExpenseChange expenseChange;
 
     public FinanceEvent(String userId, EntityType entityType, EventAction action, LocalDateTime timestamp) {
         this.userId = userId;
@@ -19,4 +22,5 @@ public class FinanceEvent {
         this.action = action;
         this.timestamp = timestamp;
     }
+
 }
