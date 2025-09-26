@@ -6,7 +6,8 @@
     <file url="file://$PROJECT_DIR$/Finance-Service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Reporting-Service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Service-Discovery/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common-auth-gate/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common-budget/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>

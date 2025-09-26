@@ -20,7 +20,8 @@
         <module>Reporting-Service</module>
         <module>API-Gateway</module>
         <module>Service-Discovery</module>
-        <module>common</module>
+        <module>common-auth-gate</module>
+        <module>common-budget</module>
     </modules>
 
     <properties>
