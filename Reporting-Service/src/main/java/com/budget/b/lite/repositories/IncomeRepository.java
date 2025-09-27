@@ -12,19 +12,27 @@ import java.util.Optional;
 
 @Repository
 public interface IncomeRepository extends JpaRepository<Income, Long> {
-    // Get Total Income For a specific user
-    @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Income i WHERE i.userEmail = :email")
-    BigDecimal getTotalIncome(@Param("email") String email);
+    // Get current month's income
+    @Query("SELECT COALESCE(i.amount, 0) FROM Income i WHERE i.userEmail = :email " +
+            "AND YEAR(i.date) = YEAR(CURRENT_DATE) AND MONTH(i.date) = MONTH(CURRENT_DATE)")
+    BigDecimal getCurrentMonthIncome(@Param("email") String email);
 
-    //Get monthly incomes (since only one record per month per user)
+    // Get income for a specific month
+    @Query("SELECT COALESCE(i.amount, 0) FROM Income i WHERE i.userEmail = :email " +
+            "AND YEAR(i.date) = :year AND MONTH(i.date) = :month")
+    BigDecimal getIncomeForMonth(@Param("email") String email,
+                                 @Param("year") int year,
+                                 @Param("month") int month);
+
+    // 2. Get monthly incomes (since only one record per month per user)
     @Query("SELECT YEAR(i.date), MONTH(i.date), i.amount " +
             "FROM Income i WHERE i.userEmail = :email ORDER BY i.date")
     List<Object[]> getMonthlyIncome(@Param("email") String email);
 
-    //Get income for a specific month
+    // Get the full Income entity for a specific month (if needed elsewhere)
     @Query("SELECT i FROM Income i WHERE i.userEmail = :email " +
             "AND YEAR(i.date) = :year AND MONTH(i.date) = :month")
-    Optional<Income> getIncomeForMonth(@Param("email") String email,
-                                       @Param("year") int year,
-                                       @Param("month") int month);
+    Optional<Income> getIncomeEntityForMonth(@Param("email") String email,
+                                             @Param("year") int year,
+                                             @Param("month") int month);
 }
