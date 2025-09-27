@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -127,5 +129,16 @@ public class AuthService {
             userRepository.save(newUser);
             refreshTokenService.deleteByEmail(user.getEmail());
         }
+    }
+
+    public Map<String, Object> validate(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo user = (UserInfo) authentication.getPrincipal();
+        if(user == null) throw new UserNotFoundException("user Not found can't delete");
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("valid", true);
+        response.put("email", user.getEmail());
+        return response;
     }
 }

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
-public record ExpensesRequest(String userEmail, BigDecimal amount,
+public record ExpensesRequest(BigDecimal amount,
                               @JsonProperty("category_id")
                               Long categoryId) {
 }

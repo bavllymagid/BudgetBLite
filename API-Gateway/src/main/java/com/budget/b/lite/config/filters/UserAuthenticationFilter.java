@@ -1,6 +1,8 @@
 package com.budget.b.lite.config.filters;
 
 import com.budget.b.lite.services.RoutingService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,11 +26,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private final Logger log = LoggerFactory.getLogger(UserAuthenticationFilter.class.getCanonicalName());
     private final RoutingService service;
+    private final ObjectMapper objectMapper;
     @Value("${user.acc:http://AUTH-SERVICE}")
     String authURL;
 
     public UserAuthenticationFilter(RoutingService service){
         this.service = service;
+        objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -45,12 +49,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             try {
-                // Create headers for the validation request
-                HttpHeaders headers = new HttpHeaders();
-                headers.set("Authorization", requestTokenHeader);
-
-                HttpEntity<String> entity = new HttpEntity<>(headers);
-
                 String url = authURL + "/api/acc/token/validate";
                 String refreshUrl = authURL + "/api/acc/token/refresh";
                 String path = request.getServletPath();
@@ -62,10 +60,22 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 int valid = validationResponse.getStatusCode().value();
 
                 if (valid < 200 || valid > 299) {
-                    log.warn("Token rejected by Auth Service");
+                    log.error("Token rejected by Auth Service");
                     sendUnauthorized(response, validationResponse.getBody());
                     return;
                 }
+
+                String responseBody = validationResponse.getBody();
+                if (responseBody != null && !"/api/acc/token/refresh".equals(path)) {
+                    try {
+                        JsonNode jsonNode = objectMapper.readTree(responseBody);
+                        String email = jsonNode.get("email").asText();
+                        request.setAttribute("email", email);
+                    } catch (Exception e) {
+                        log.error("Could not extract email from validation response", e);
+                    }
+                }
+
             } catch (Exception e) {
                 log.error("Token validation failed", e);
                 sendUnauthorized(response, "{ \"error\" : \""+ e.getMessage() + "\" }");

@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/budget")
 public class BudgetController {
@@ -23,9 +25,9 @@ public class BudgetController {
 
     // ---------- INCOME ----------
 
-    @PostMapping("/income")
-    public ResponseEntity<Income> addIncome(@RequestBody IncomeRequest request) {
-        return ResponseEntity.ok(service.addIncome(request));
+    @PostMapping("/income/{email}")
+    public ResponseEntity<Income> addIncome(@PathVariable String email ,@RequestParam BigDecimal amount) {
+        return ResponseEntity.ok(service.addIncome(email , amount));
     }
 
     @GetMapping("/income/{email}")
@@ -35,9 +37,9 @@ public class BudgetController {
 
     // ---------- EXPENSES ----------
 
-    @PostMapping("/expenses")
-    public ResponseEntity<ExpensesDTO> addExpense(@RequestBody ExpensesRequest request) {
-        return ResponseEntity.ok(service.addExpenses(request));
+    @PostMapping("/expenses/{email}")
+    public ResponseEntity<ExpensesDTO> addExpense(@PathVariable String email, @RequestBody ExpensesRequest request) {
+        return ResponseEntity.ok(service.addExpenses(email,request));
     }
 
     @GetMapping("/expenses/{email}")

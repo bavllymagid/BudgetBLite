@@ -20,7 +20,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -45,12 +47,12 @@ public class BudgetService {
         this.producerService = producerService;
     }
 
-    public Income addIncome(IncomeRequest request) {
+    public Income addIncome(String email ,BigDecimal amount) {
         Income income = incomeRepository
-                .findRecentIncomeByUserEmail(request.userEmail(), LocalDate.now().minusDays(30))
-                .orElse(new Income(request.userEmail(), LocalDate.now()));
+                .findRecentIncomeByUserEmail(email, LocalDate.now().minusDays(30))
+                .orElse(new Income(email, LocalDate.now()));
 
-        income.setAmount(request.amount());
+        income.setAmount(amount);
         Income saved = incomeRepository.save(income);
 
         sendFinanceEvent(saved.getUserEmail(), EntityType.INCOME, EventAction.UPDATED, null, null);
@@ -58,14 +60,14 @@ public class BudgetService {
         return saved;
     }
 
-    public ExpensesDTO addExpenses(ExpensesRequest request) {
+    public ExpensesDTO addExpenses(String email,ExpensesRequest request) {
         var category = categoryService.getCategoryById(request.categoryId());
         if (category == null) {
             throw new CategoryNotFoundException("Category not found with id: " + request.categoryId());
         }
 
         Expenses saved = expensesRepository.save(
-                new Expenses(request.userEmail(), request.amount(), LocalDate.now(), category)
+                new Expenses(email, request.amount(), LocalDate.now(), category)
         );
 
         sendFinanceEvent(saved.getUserEmail(), EntityType.EXPENSES, EventAction.CREATED, null, null);
@@ -88,9 +90,6 @@ public class BudgetService {
         Expenses expense = expensesRepository.findById(expenseId)
                 .orElseThrow(() -> new NoExpenseFoundException("Expense not found with id: " + expenseId));
         ExpenseChange change = new ExpenseChange();
-        if (request.userEmail() != null && !request.userEmail().isEmpty()) {
-            expense.setUserEmail(request.userEmail());
-        }
         if (request.amount() != null) {
             change.setOldAmount(expense.getAmount());
             expense.setAmount(request.amount());

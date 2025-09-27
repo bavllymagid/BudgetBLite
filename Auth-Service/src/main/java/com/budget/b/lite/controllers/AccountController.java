@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/acc")
 public class AccountController {
@@ -31,8 +33,8 @@ public class AccountController {
     }
 
     @GetMapping("/token/validate")
-    public ResponseEntity<Boolean> validate(){
-        return ResponseEntity.ok(true);
+    public ResponseEntity<Map<String, Object>> validate(){
+        return ResponseEntity.ok(authService.validate());
     }
 
     @GetMapping("/logout")

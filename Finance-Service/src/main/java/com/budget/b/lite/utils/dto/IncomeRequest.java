@@ -4,5 +4,5 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
-public record IncomeRequest(String userEmail, BigDecimal amount) {
+public record IncomeRequest(BigDecimal amount) {
 }
