@@ -1,5 +1,36 @@
 spring:
+  application:
+    name: Reporting-Service
   datasource:
-    url: jdbc:postgresql://localhost:5432/your_database
-    username: your_username
-    password: your_password
+    url: jdbc:postgresql://dpg-d35vr2qli9vc738ptucg-a.frankfurt-postgres.render.com/employees_db_54tp
+    username: bvm
+    password: gk7I712z3feW7jEUxghf4UQM4Z6otDID
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+server:
+  port: 8083
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+host:
+  value: localhost:29092
+  topic: finance-events
