@@ -1,6 +1,6 @@
-package com.budget.b.lite.utils.exceptions;
+package com.budget.b.lite.exceptions;
 
-import com.budget.b.lite.utils.exceptions.custom_exceptions.*;
+import com.budget.b.lite.exceptions.custom_exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -13,7 +13,7 @@ import java.util.Map;
 @ControllerAdvice
 public class BudgetExceptionHandler {
 
-    @ExceptionHandler({NoExpenseFoundException.class, NoIncomeFoundException.class})
+    @ExceptionHandler({NoExpenseFoundException.class, NoIncomeFoundException.class, ExpenseChangeEmptyException.class})
     public ResponseEntity<Object> handleBudgetExceptions(RuntimeException ex){
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
 

@@ -2,8 +2,8 @@ package com.budget.b.lite.services;
 
 import com.budget.b.lite.entities.Category;
 import com.budget.b.lite.repositories.CategoryRepository;
-import com.budget.b.lite.utils.exceptions.custom_exceptions.CategoryExistsException;
-import com.budget.b.lite.utils.exceptions.custom_exceptions.CategoryNotFoundException;
+import com.budget.b.lite.exceptions.custom_exceptions.CategoryExistsException;
+import com.budget.b.lite.exceptions.custom_exceptions.CategoryNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 

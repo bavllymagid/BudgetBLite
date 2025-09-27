@@ -1,11 +1,13 @@
 package com.budget.b.lite.services;
 
+import com.budget.b.lite.entities.Income;
 import com.budget.b.lite.payload.ReportResponse;
 import com.budget.b.lite.payload.reports.ExpensesReport;
 import com.budget.b.lite.payload.reports.IncomeReport;
 import com.budget.b.lite.payload.reports.SavingsReport;
 import com.budget.b.lite.repositories.ExpensesRepository;
 import com.budget.b.lite.repositories.IncomeRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,7 +24,8 @@ public class DBRetrieveReportService {
         this.expensesRepository = expensesRepository;
     }
 
-    // Entry point that assembles the full report
+    // Entry point that assembles the full report with caching
+    @Cacheable(value = "reports", key = "#email + ':' + T(java.time.YearMonth).now().toString()")
     public ReportResponse generateReport(String email) {
         ReportResponse report = new ReportResponse();
         report.setUserEmail(email);
@@ -35,32 +38,25 @@ public class DBRetrieveReportService {
         return report;
     }
 
-    // ================== INCOME ==================
+    // ================== CURRENT MONTH INCOME ==================
+    @Cacheable(value = "reports", key = "'income:' + #email + ':current'")
     private IncomeReport buildIncome(String email) {
-        // Get current month's income instead of total across all months
-        BigDecimal currentMonthIncome = incomeRepository.getCurrentMonthIncome(email);
-        List<Object[]> monthlyIncomeRows = incomeRepository.getMonthlyIncome(email);
+        BigDecimal currentMonthIncome = incomeRepository.getIncomeForMonth(email, LocalDateTime.now().getYear(), LocalDateTime.now().getMonthValue());
+        List<Income> monthlyIncomeRows = incomeRepository.getMonthlyIncomes(email);
 
         IncomeReport income = new IncomeReport();
         income.setTotal(currentMonthIncome.doubleValue());
-        income.setMonthly(
-                monthlyIncomeRows.stream().map(row -> {
-                    IncomeReport.MonthlyIncome dto = new IncomeReport.MonthlyIncome();
-                    // Updated to handle Integer year and month instead of String
-                    Integer year = (Integer) row[0];
-                    Integer month = (Integer) row[1];
-                    BigDecimal amount = (BigDecimal) row[2];
-
-                    // Format as YYYY-MM for consistency
-                    dto.setMonth(String.format("%04d-%02d", year, month));
-                    dto.setAmount(amount.doubleValue());
-                    return dto;
-                }).toList()
-        );
+        income.setMonthly(monthlyIncomeRows.stream().map(in->{
+            IncomeReport.MonthlyIncome monthlyIncome =  new IncomeReport.MonthlyIncome();
+            monthlyIncome.setAmount(in.getAmount());
+            monthlyIncome.setMonth(in.getDate());
+            return monthlyIncome;
+        }).toList());
         return income;
     }
 
-    // ================== EXPENSES ==================
+    // ================== CURRENT MONTH EXPENSES ==================
+    @Cacheable(value = "category-expenses", key = "#email + ':current'")
     private ExpensesReport buildExpenses(String email) {
         BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email);
         List<Object[]> expensesByCategory = expensesRepository.getExpensesByCategory(email);
@@ -84,25 +80,23 @@ public class DBRetrieveReportService {
         }).toList();
 
         expenses.setCategories(categoryExpenses);
-
-        // Use the new repository method for most used category
         String mostUsedCategory = expensesRepository.getMostUsedCategory(email);
         expenses.setMostUsedCategory(mostUsedCategory);
 
         return expenses;
     }
 
-    // ================== SAVINGS ==================
+    // ================== CURRENT MONTH SAVINGS ==================
     private SavingsReport buildSavings(String email) {
-        BigDecimal totalIncome = incomeRepository.getCurrentMonthIncome(email);
+        BigDecimal currentMonthIncome = incomeRepository.getCurrentMonthIncome(email);
         BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email);
 
         SavingsReport savings = new SavingsReport();
-        double savingsValue = totalIncome.doubleValue() - totalExpenses.doubleValue();
+        double savingsValue = currentMonthIncome.doubleValue() - totalExpenses.doubleValue();
         savings.setTotal(savingsValue);
 
-        if (totalIncome.doubleValue() > 0) {
-            savings.setPercentageOfIncome((savingsValue / totalIncome.doubleValue()) * 100);
+        if (currentMonthIncome.doubleValue() > 0) {
+            savings.setPercentageOfIncome((savingsValue / currentMonthIncome.doubleValue()) * 100);
         } else {
             savings.setPercentageOfIncome(0.0);
         }

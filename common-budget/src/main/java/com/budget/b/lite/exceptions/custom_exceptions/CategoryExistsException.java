@@ -1,4 +1,4 @@
-package com.budget.b.lite.utils.exceptions.custom_exceptions;
+package com.budget.b.lite.exceptions.custom_exceptions;
 
 public class CategoryExistsException extends RuntimeException{
     public CategoryExistsException(String message) {

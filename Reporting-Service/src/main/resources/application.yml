@@ -12,6 +12,38 @@ spring:
     redis:
       host: localhost
       port: 6379
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    database: 0
+    timeout: 2000ms
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+  cache:
+    type: redis
+    redis.time-to-live: 1800000
+    redis.cache-null-values: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: budget-report-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: com.budget.b.lite.dto
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 10000
+    listener:
+      ack-mode: record
 
   cloud:
     gateway:

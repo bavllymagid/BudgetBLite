@@ -2,6 +2,8 @@ package com.budget.b.lite.payload.reports;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -11,7 +13,7 @@ public class IncomeReport {
 
     @Data
     public static class MonthlyIncome {
-        private String month;
-        private Double amount;
+        private LocalDate month;
+        private BigDecimal amount;
     }
 }
