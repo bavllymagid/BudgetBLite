@@ -39,8 +39,7 @@ public class DBRetrieveReportService {
     }
 
     // ================== CURRENT MONTH INCOME ==================
-    @Cacheable(value = "reports", key = "'income:' + #email + ':current'")
-    private IncomeReport buildIncome(String email) {
+    public IncomeReport buildIncome(String email) {
         BigDecimal currentMonthIncome = incomeRepository.getIncomeForMonth(email, LocalDateTime.now().getYear(), LocalDateTime.now().getMonthValue());
         List<Income> monthlyIncomeRows = incomeRepository.getMonthlyIncomes(email);
 
@@ -56,8 +55,7 @@ public class DBRetrieveReportService {
     }
 
     // ================== CURRENT MONTH EXPENSES ==================
-    @Cacheable(value = "category-expenses", key = "#email + ':current'")
-    private ExpensesReport buildExpenses(String email) {
+    public ExpensesReport buildExpenses(String email) {
         BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email);
         List<Object[]> expensesByCategory = expensesRepository.getExpensesByCategory(email);
 

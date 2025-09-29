@@ -9,6 +9,8 @@ import com.budget.b.lite.exceptions.custom_exceptions.CategoryNotFoundException;
 import com.budget.b.lite.exceptions.custom_exceptions.ExpenseChangeEmptyException;
 import com.budget.b.lite.exceptions.custom_exceptions.NoExpenseFoundException;
 import com.budget.b.lite.payload.ReportResponse;
+import com.budget.b.lite.payload.reports.ExpensesReport;
+import com.budget.b.lite.payload.reports.IncomeReport;
 import com.budget.b.lite.repositories.CategoryRepository;
 import com.budget.b.lite.repositories.ExpensesRepository;
 import com.budget.b.lite.repositories.IncomeRepository;
@@ -24,20 +26,26 @@ import java.util.Optional;
 @Slf4j
 public class ReportService {
 
-    private final IncomeRepository incomeRepository;
-    private final ExpensesRepository expensesRepository;
-    private final CategoryRepository categoryRepository;
+    private final DBRetrieveReportService retrieveReportService;
     private final CacheService cacheService;
+    private final ExpensesRepository expensesRepository;
 
-    public ReportService(IncomeRepository incomeRepository,
-                         ExpensesRepository expensesRepository,
-                         CategoryRepository categoryRepository,
-                         CacheService cacheService) {
-        this.incomeRepository = incomeRepository;
-        this.expensesRepository = expensesRepository;
-        this.categoryRepository = categoryRepository;
+    public ReportService(DBRetrieveReportService retrieveReportService,
+                         CacheService cacheService,
+                         ExpensesRepository expensesRepository) {
+        this.retrieveReportService = retrieveReportService;
         this.cacheService = cacheService;
+        this.expensesRepository = expensesRepository;
     }
+
+    public ReportResponse getReport(String email){
+        ReportResponse cache = cacheService.getCache(email);
+        if(cache == null){
+            cache = retrieveReportService.generateReport(email);
+        }
+        return cache;
+    }
+
 
     @KafkaListener(topics = "${host.topic}",
             groupId = "${spring.kafka.consumer.group-id:budget-report-service}")
@@ -46,9 +54,14 @@ public class ReportService {
         log.info("Received finance event: {}", event);
 
         try {
+            ReportResponse cache = cacheService.getCache(event.getUserId());
+            if(cache == null){
+                retrieveReportService.generateReport(event.getUserId());
+                return;
+            }
             switch (event.getEntityType()) {
-                case INCOME -> handleIncomeEvent(event);
-                case EXPENSES -> handleExpenseEvent(event);
+                case INCOME -> handleIncomeEvent(event, cache);
+                case EXPENSES -> handleExpenseEvent(event, cache);
                 default -> log.warn("Unknown entity type: {}", event.getEntityType());
             }
 
@@ -58,35 +71,18 @@ public class ReportService {
         }
     }
 
-    private void handleIncomeEvent(FinanceEvent event) {
-
+    private void handleIncomeEvent(FinanceEvent event, ReportResponse cache) {
+        IncomeReport report = retrieveReportService.buildIncome(event.getUserId());
+        cache.setIncome(report);
+        cacheService.AddCache(cache);
     }
 
-    private void handleExpenseEvent(FinanceEvent event) {
-        switch (event.getAction()) {
-            case CREATED -> handleExpenseCreated(event);
-            case UPDATED -> handleExpenseUpdated(event);
-            case DELETED -> handleExpenseDeleted(event);
-            default -> log.warn("Unknown action for expense: {}", event.getAction());
+    private void handleExpenseEvent(FinanceEvent event, ReportResponse cache) {
+        if(event.getAction().equals(EventAction.DELETED)){
+            expensesRepository.deleteAllMarkedAsDeleted();
         }
-    }
-
-    private void handleExpenseCreated(FinanceEvent event) {
-
-
-    }
-
-    private void handleExpenseUpdated(FinanceEvent event) {
-
-
-    }
-
-    private void handleExpenseDeleted(FinanceEvent event) {
-
-    }
-
-    private Category findCategory(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException("No category found with id: " + id));
+        ExpensesReport report = retrieveReportService.buildExpenses(event.getUserId());
+        cache.setExpenses(report);
+        cacheService.AddCache(cache);
     }
 }

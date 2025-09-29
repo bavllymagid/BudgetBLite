@@ -21,10 +21,25 @@ public class CacheService {
     /**
      * Check if a specific report is cached
      */
-    public ReportResponse isReportCached(String email) {
-        String key = email + ":" + YearMonth.now().toString();
+    public ReportResponse getCache(String email) {
+        String key = email + ":" + YearMonth.now();
         Cache reportsCache = cacheManager.getCache("reports");
-        return reportsCache != null ? (ReportResponse) reportsCache.get(key) : null;
+
+        if (reportsCache != null) {
+            Cache.ValueWrapper wrapper = reportsCache.get(key);
+            if (wrapper != null && wrapper.get() != null) {
+                return (ReportResponse) wrapper.get();
+            }
+        }
+
+        return null;
     }
 
+    public void AddCache(ReportResponse report) {
+        String key = report.getUserEmail() + ":" + YearMonth.now();
+        Cache reportsCache = cacheManager.getCache("reports");
+        if (reportsCache != null) {
+            reportsCache.put(key, report);
+        }
+    }
 }
