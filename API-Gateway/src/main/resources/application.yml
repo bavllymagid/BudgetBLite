@@ -30,6 +30,9 @@ services:
   finance:
     name: FINANCE-SERVICE
     url: http://FINANCE-SERVICE
+  report:
+    name: REPORTING-SERVICE
+    url: http://REPORTING-SERVICE
 
 
 eureka:

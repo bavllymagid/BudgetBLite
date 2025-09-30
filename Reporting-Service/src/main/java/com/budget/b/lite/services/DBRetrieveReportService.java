@@ -85,7 +85,7 @@ public class DBRetrieveReportService {
     }
 
     // ================== CURRENT MONTH SAVINGS ==================
-    private SavingsReport buildSavings(String email) {
+    public SavingsReport buildSavings(String email) {
         BigDecimal currentMonthIncome = incomeRepository.getCurrentMonthIncome(email);
         BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email);
 

@@ -11,6 +11,7 @@ import com.budget.b.lite.exceptions.custom_exceptions.NoExpenseFoundException;
 import com.budget.b.lite.payload.ReportResponse;
 import com.budget.b.lite.payload.reports.ExpensesReport;
 import com.budget.b.lite.payload.reports.IncomeReport;
+import com.budget.b.lite.payload.reports.SavingsReport;
 import com.budget.b.lite.repositories.CategoryRepository;
 import com.budget.b.lite.repositories.ExpensesRepository;
 import com.budget.b.lite.repositories.IncomeRepository;
@@ -73,7 +74,9 @@ public class ReportService {
 
     private void handleIncomeEvent(FinanceEvent event, ReportResponse cache) {
         IncomeReport report = retrieveReportService.buildIncome(event.getUserId());
+        SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId());
         cache.setIncome(report);
+        cache.setSavings(savingsReport);
         cacheService.AddCache(cache);
     }
 
@@ -82,7 +85,9 @@ public class ReportService {
             expensesRepository.deleteAllMarkedAsDeleted();
         }
         ExpensesReport report = retrieveReportService.buildExpenses(event.getUserId());
+        SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId());
         cache.setExpenses(report);
+        cache.setSavings(savingsReport);
         cacheService.AddCache(cache);
     }
 }
