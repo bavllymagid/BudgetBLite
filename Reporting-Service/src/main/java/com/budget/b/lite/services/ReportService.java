@@ -29,20 +29,17 @@ public class ReportService {
 
     private final DBRetrieveReportService retrieveReportService;
     private final CacheService cacheService;
-    private final ExpensesRepository expensesRepository;
 
     public ReportService(DBRetrieveReportService retrieveReportService,
-                         CacheService cacheService,
-                         ExpensesRepository expensesRepository) {
+                         CacheService cacheService) {
         this.retrieveReportService = retrieveReportService;
         this.cacheService = cacheService;
-        this.expensesRepository = expensesRepository;
     }
 
-    public ReportResponse getReport(String email){
+    public ReportResponse getReport(String email, LocalDate date){
         ReportResponse cache = cacheService.getCache(email);
         if(cache == null){
-            cache = retrieveReportService.generateReport(email);
+            cache = retrieveReportService.generateReport(email, date);
         }
         return cache;
     }
@@ -57,7 +54,7 @@ public class ReportService {
         try {
             ReportResponse cache = cacheService.getCache(event.getUserId());
             if(cache == null){
-                retrieveReportService.generateReport(event.getUserId());
+                retrieveReportService.generateReport(event.getUserId(), LocalDate.now());
                 return;
             }
             switch (event.getEntityType()) {
@@ -73,19 +70,16 @@ public class ReportService {
     }
 
     private void handleIncomeEvent(FinanceEvent event, ReportResponse cache) {
-        IncomeReport report = retrieveReportService.buildIncome(event.getUserId());
-        SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId());
+        IncomeReport report = retrieveReportService.buildIncome(event.getUserId(), LocalDate.now());
+        SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId(), LocalDate.now());
         cache.setIncome(report);
         cache.setSavings(savingsReport);
         cacheService.AddCache(cache);
     }
 
     private void handleExpenseEvent(FinanceEvent event, ReportResponse cache) {
-        if(event.getAction().equals(EventAction.DELETED)){
-            expensesRepository.deleteAllMarkedAsDeleted();
-        }
-        ExpensesReport report = retrieveReportService.buildExpenses(event.getUserId());
-        SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId());
+        ExpensesReport report = retrieveReportService.buildExpenses(event.getUserId(), LocalDate.now());
+        SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId(), LocalDate.now());
         cache.setExpenses(report);
         cache.setSavings(savingsReport);
         cacheService.AddCache(cache);

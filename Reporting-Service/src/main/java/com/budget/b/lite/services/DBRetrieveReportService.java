@@ -1,6 +1,7 @@
 package com.budget.b.lite.services;
 
 import com.budget.b.lite.entities.Income;
+import com.budget.b.lite.exceptions.custom_exceptions.NoReportFoundException;
 import com.budget.b.lite.payload.ReportResponse;
 import com.budget.b.lite.payload.reports.ExpensesReport;
 import com.budget.b.lite.payload.reports.IncomeReport;
@@ -11,6 +12,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,21 +28,24 @@ public class DBRetrieveReportService {
 
     // Entry point that assembles the full report with caching
     @Cacheable(value = "reports", key = "#email + ':' + T(java.time.YearMonth).now().toString()")
-    public ReportResponse generateReport(String email) {
+    public ReportResponse generateReport(String email, LocalDate date) {
         ReportResponse report = new ReportResponse();
         report.setUserEmail(email);
         report.setReportGeneratedAt(LocalDateTime.now());
 
-        report.setIncome(buildIncome(email));
-        report.setExpenses(buildExpenses(email));
-        report.setSavings(buildSavings(email));
+        if(date == null) date = LocalDate.now();
+
+        report.setIncome(buildIncome(email, date));
+        report.setExpenses(buildExpenses(email, date));
+        report.setSavings(buildSavings(email, date));
 
         return report;
     }
 
     // ================== CURRENT MONTH INCOME ==================
-    public IncomeReport buildIncome(String email) {
-        BigDecimal currentMonthIncome = incomeRepository.getIncomeForMonth(email, LocalDateTime.now().getYear(), LocalDateTime.now().getMonthValue());
+    public IncomeReport buildIncome(String email, LocalDate date) {
+        BigDecimal currentMonthIncome = incomeRepository.getIncomeForMonth(email, date.getYear(), date.getMonthValue())
+                .orElseThrow(()->new NoReportFoundException("No report found for current month please insert your income"));
         List<Income> monthlyIncomeRows = incomeRepository.getMonthlyIncomes(email);
 
         IncomeReport income = new IncomeReport();
@@ -55,9 +60,9 @@ public class DBRetrieveReportService {
     }
 
     // ================== CURRENT MONTH EXPENSES ==================
-    public ExpensesReport buildExpenses(String email) {
-        BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email);
-        List<Object[]> expensesByCategory = expensesRepository.getExpensesByCategory(email);
+    public ExpensesReport buildExpenses(String email, LocalDate date) {
+        BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email, date.getYear(), date.getMonthValue());
+        List<Object[]> expensesByCategory = expensesRepository.getExpensesByCategory(email, date.getYear(), date.getMonthValue());
 
         ExpensesReport expenses = new ExpensesReport();
         expenses.setTotal(totalExpenses.doubleValue());
@@ -78,16 +83,18 @@ public class DBRetrieveReportService {
         }).toList();
 
         expenses.setCategories(categoryExpenses);
-        String mostUsedCategory = expensesRepository.getMostUsedCategory(email);
+        String mostUsedCategory = expensesRepository.getMostUsedCategory(email, date.getYear(), date.getMonthValue());
         expenses.setMostUsedCategory(mostUsedCategory);
 
         return expenses;
     }
 
     // ================== CURRENT MONTH SAVINGS ==================
-    public SavingsReport buildSavings(String email) {
-        BigDecimal currentMonthIncome = incomeRepository.getCurrentMonthIncome(email);
-        BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email);
+    public SavingsReport buildSavings(String email, LocalDate date) {
+        BigDecimal currentMonthIncome = incomeRepository.getIncomeForMonth(email, date.getYear(), date.getMonthValue())
+                .orElseThrow(()->new NoReportFoundException("No report found for current month please insert your income"));
+
+        BigDecimal totalExpenses = expensesRepository.getTotalExpenses(email, date.getYear(), date.getMonthValue());
 
         SavingsReport savings = new SavingsReport();
         double savingsValue = currentMonthIncome.doubleValue() - totalExpenses.doubleValue();

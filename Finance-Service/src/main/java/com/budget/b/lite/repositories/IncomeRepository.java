@@ -12,12 +12,12 @@ import java.util.Optional;
 
 @Repository
 public interface IncomeRepository extends JpaRepository<Income, Long> {
-    @Query("SELECT i FROM Income i " +
-            "WHERE i.userEmail = :userEmail " +
-            "AND i.date >= :dateLimit")
+    @Query("FROM Income i WHERE i.userEmail = :userEmail " +
+            "AND YEAR(i.date) = :year AND MONTH(i.date) = :month")
     Optional<Income> findRecentIncomeByUserEmail(
             @Param("userEmail") String userEmail,
-            @Param("dateLimit") LocalDate dateLimit
+            @Param("year") int year,
+            @Param("month") int month
     );
 
     Optional<Income> findByUserEmail(String email);

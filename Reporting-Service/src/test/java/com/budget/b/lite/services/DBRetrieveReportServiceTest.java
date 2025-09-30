@@ -20,6 +20,6 @@ class DBRetrieveReportServiceTest {
 
     @Test
     void generateReport() {
-        System.out.println(service.generateReport("b1@gmail.com").toString());
+        System.out.println(service.generateReport("b1@gmail.com", null).toString());
     }
 }

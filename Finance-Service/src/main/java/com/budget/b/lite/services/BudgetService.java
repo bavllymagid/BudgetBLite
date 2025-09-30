@@ -47,13 +47,13 @@ public class BudgetService {
 
     public Income addIncome(String email ,BigDecimal amount) {
         Income income = incomeRepository
-                .findRecentIncomeByUserEmail(email, LocalDate.now().minusDays(30))
+                .findRecentIncomeByUserEmail(email, LocalDate.now().getYear(), LocalDate.now().getMonthValue())
                 .orElse(new Income(email, LocalDate.now()));
 
         income.setAmount(amount);
         Income saved = incomeRepository.save(income);
 
-        sendFinanceEvent(saved.getUserEmail(), EntityType.INCOME, EventAction.UPDATED, null, null);
+        sendFinanceEvent(saved.getUserEmail(), EntityType.INCOME, EventAction.UPDATED);
 
         return saved;
     }
@@ -65,10 +65,10 @@ public class BudgetService {
         }
 
         Expenses saved = expensesRepository.save(
-                new Expenses(email, request.amount(), LocalDate.now(), category)
+                new Expenses(email, request.amount(), category)
         );
 
-        sendFinanceEvent(saved.getUserEmail(), EntityType.EXPENSES, EventAction.CREATED, null, null);
+        sendFinanceEvent(saved.getUserEmail(), EntityType.EXPENSES, EventAction.CREATED);
 
         return mapToDTO(saved);
     }
@@ -106,34 +106,25 @@ public class BudgetService {
 
         Expenses saved = expensesRepository.save(expense);
 
-        sendFinanceEvent(saved.getUserEmail(), EntityType.EXPENSES, EventAction.UPDATED, change, expenseId);
+        sendFinanceEvent(saved.getUserEmail(), EntityType.EXPENSES, EventAction.UPDATED);
 
         return mapToDTO(saved);
     }
 
     public void deleteExpenseById(Long expenseId) {
         Expenses expense = expensesRepository.findById(expenseId)
-                .orElseThrow(() -> new NoExpenseFoundException("Expense not found with id: " + expenseId));
-
-        if (expense.isDeleted()) {
-            throw new ExpenseAlreadyDeletedException("Expense already deleted with id: " + expenseId);
-        }
-
-        expense.setDeleted(true);
-        expensesRepository.save(expense);
-
-        sendFinanceEvent(expense.getUserEmail(), EntityType.EXPENSES, EventAction.DELETED,null, expenseId);
+                .orElseThrow(() -> new ExpenseAlreadyDeletedException("Expense not found with id: " + expenseId));
+        expensesRepository.delete(expense);
+        sendFinanceEvent(expense.getUserEmail(), EntityType.EXPENSES, EventAction.DELETED);
     }
 
-    private void sendFinanceEvent(String userEmail, EntityType type, EventAction action, ExpenseChange change, Long expenseId) {
+    private void sendFinanceEvent(String userEmail, EntityType type, EventAction action) {
         FinanceEvent event = new FinanceEvent(
                 userEmail,
                 type,
                 action,
                 LocalDateTime.now()
         );
-        event.setExpenseChange(change);
-        event.setExpenseId(expenseId);
         producerService.sendEvent(topicName, event);
     }
 

@@ -36,7 +36,7 @@ public class RedisConfig {
                 new Jackson2JsonRedisSerializer<>(cacheObjectMapper(), ReportResponse.class);
 
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(24))
+                .entryTtl(Duration.ofMinutes(30))
                 .serializeKeysWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer())
                 )

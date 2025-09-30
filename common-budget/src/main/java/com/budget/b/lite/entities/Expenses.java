@@ -43,6 +43,7 @@ public class Expenses {
 
     @PrePersist
     private void setTime(){
+        date = LocalDate.now();
         createdAt = new Timestamp(System.currentTimeMillis());
         updatedAt = new Timestamp(System.currentTimeMillis());
     }
@@ -52,10 +53,9 @@ public class Expenses {
         updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
-    public Expenses(String userEmail, BigDecimal amount, LocalDate date, Category category) {
+    public Expenses(String userEmail, BigDecimal amount, Category category) {
         this.userEmail = userEmail;
         this.amount = amount;
-        this.date = date;
         this.category = category;
     }
 }

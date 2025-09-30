@@ -13,7 +13,8 @@ import java.util.Map;
 @ControllerAdvice
 public class BudgetExceptionHandler {
 
-    @ExceptionHandler({NoExpenseFoundException.class, NoIncomeFoundException.class, ExpenseChangeEmptyException.class})
+    @ExceptionHandler({NoExpenseFoundException.class, NoIncomeFoundException.class,
+            ExpenseChangeEmptyException.class, NoReportFoundException.class})
     public ResponseEntity<Object> handleBudgetExceptions(RuntimeException ex){
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
 

@@ -11,12 +11,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class FinanceEvent {
     private String userId;
-    private Long expenseId;
     private EntityType entityType;
     private EventAction action;
     private LocalDateTime timestamp;
-
-    private ExpenseChange expenseChange;
 
     public FinanceEvent(String userId, EntityType entityType, EventAction action, LocalDateTime timestamp) {
         this.userId = userId;

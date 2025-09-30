@@ -1,9 +1,7 @@
 package com.budget.b.lite.repositories;
 
 import com.budget.b.lite.entities.Expenses;
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,41 +14,31 @@ public interface ExpensesRepository extends JpaRepository<Expenses, Long> {
     //Total expenses for a user
     @Query("SELECT COALESCE(SUM(e.amount), 0) " +
             "FROM Expenses e " +
-            "WHERE e.userEmail = :email AND e.isDeleted = false")
-    BigDecimal getTotalExpenses(@Param("email") String email);
+            "WHERE e.userEmail = :email " +
+            "AND YEAR(e.date) = :year AND MONTH(e.date) = :month")
+    BigDecimal getTotalExpenses(@Param("email") String email,
+                                @Param("year") int year,
+                                @Param("month") int month);
 
     //Expenses grouped by category
-    @Query("SELECT c.name, COALESCE(SUM(e.amount), 0) " +
+    @Query(value = "SELECT c.name, COALESCE(SUM(e.amount), 0) " +
             "FROM Expenses e JOIN e.category c " +
-            "WHERE e.userEmail = :email AND e.isDeleted = false " +
+            "WHERE e.userEmail = :email AND YEAR(e.date) = :year AND MONTH(e.date) = :month " +
             "GROUP BY c.name ORDER BY SUM(e.amount) DESC")
-    List<Object[]> getExpensesByCategory(@Param("email") String email);
+    List<Object[]> getExpensesByCategory(@Param("email") String email,
+                                         @Param("year") int year,
+                                         @Param("month") int month);
 
     //Most used category (highest spending)
-    @Query(value = "SELECT c.name " +
-            "FROM expenses e JOIN categories c ON e.category_id = c.category_id " +
-            "WHERE e.user_email = :email AND e.deleted = false " +
-            "GROUP BY c.name ORDER BY SUM(e.amount) DESC LIMIT 1",
-            nativeQuery = true)
-    String getMostUsedCategory(@Param("email") String email);
+    @Query("SELECT c.name " +
+            "FROM Expenses e JOIN e.category c " +
+            "WHERE e.userEmail = :email " +
+            "AND YEAR(e.date) = :year AND MONTH(e.date) = :month " +
+            "GROUP BY c.name " +
+            "ORDER BY SUM(e.amount) DESC " +
+            "LIMIT 1")
+    String getMostUsedCategory(@Param("email") String email,
+                               @Param("year") int year,
+                               @Param("month") int month);
 
-    //Expenses grouped by month (for trend reporting)
-    @Query("SELECT YEAR(e.date), MONTH(e.date), COALESCE(SUM(e.amount), 0) " +
-            "FROM Expenses e WHERE e.userEmail = :email AND e.isDeleted = false " +
-            "GROUP BY YEAR(e.date), MONTH(e.date) " +
-            "ORDER BY YEAR(e.date), MONTH(e.date)")
-    List<Object[]> getMonthlyExpenses(@Param("email") String email);
-
-    //Expenses for a specific month
-    @Query("SELECT COALESCE(SUM(e.amount), 0) " +
-            "FROM Expenses e WHERE e.userEmail = :email AND e.isDeleted = false " +
-            "AND YEAR(e.date) = :year AND MONTH(e.date) = :month")
-    BigDecimal getMonthlyExpenses(@Param("email") String email,
-                                  @Param("year") int year,
-                                  @Param("month") int month);
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Expenses e WHERE e.isDeleted = true")
-    int deleteAllMarkedAsDeleted();
 }
