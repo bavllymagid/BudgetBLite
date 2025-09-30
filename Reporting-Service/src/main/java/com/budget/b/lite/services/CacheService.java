@@ -21,8 +21,8 @@ public class CacheService {
     /**
      * Check if a specific report is cached
      */
-    public ReportResponse getCache(String email) {
-        String key = email + ":" + YearMonth.now();
+    public ReportResponse getCache(String email, YearMonth date) {
+        String key = email + ":" + date;
         Cache reportsCache = cacheManager.getCache("reports");
 
         if (reportsCache != null) {
@@ -35,8 +35,8 @@ public class CacheService {
         return null;
     }
 
-    public void AddCache(ReportResponse report) {
-        String key = report.getUserEmail() + ":" + YearMonth.now();
+    public void AddCache(ReportResponse report, YearMonth date) {
+        String key = report.getUserEmail() + ":" + date;
         Cache reportsCache = cacheManager.getCache("reports");
         if (reportsCache != null) {
             reportsCache.put(key, report);

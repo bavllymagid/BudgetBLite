@@ -27,7 +27,7 @@ public class DBRetrieveReportService {
     }
 
     // Entry point that assembles the full report with caching
-    @Cacheable(value = "reports", key = "#email + ':' + T(java.time.YearMonth).now().toString()")
+    @Cacheable(value = "reports", key = "#email + ':' + #date.toString()")
     public ReportResponse generateReport(String email, LocalDate date) {
         ReportResponse report = new ReportResponse();
         report.setUserEmail(email);

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.time.YearMonth;
 
 @Service
 @Slf4j
@@ -37,7 +37,8 @@ public class ReportService {
     }
 
     public ReportResponse getReport(String email, LocalDate date){
-        ReportResponse cache = cacheService.getCache(email);
+        if(date == null) date = LocalDate.now();
+        ReportResponse cache = cacheService.getCache(email, YearMonth.from(date));
         if(cache == null){
             cache = retrieveReportService.generateReport(email, date);
         }
@@ -52,7 +53,7 @@ public class ReportService {
         log.info("Received finance event: {}", event);
 
         try {
-            ReportResponse cache = cacheService.getCache(event.getUserId());
+            ReportResponse cache = cacheService.getCache(event.getUserId(), YearMonth.now());
             if(cache == null){
                 retrieveReportService.generateReport(event.getUserId(), LocalDate.now());
                 return;
@@ -74,7 +75,7 @@ public class ReportService {
         SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId(), LocalDate.now());
         cache.setIncome(report);
         cache.setSavings(savingsReport);
-        cacheService.AddCache(cache);
+        cacheService.AddCache(cache, YearMonth.now());
     }
 
     private void handleExpenseEvent(FinanceEvent event, ReportResponse cache) {
@@ -82,6 +83,6 @@ public class ReportService {
         SavingsReport savingsReport = retrieveReportService.buildSavings(event.getUserId(), LocalDate.now());
         cache.setExpenses(report);
         cache.setSavings(savingsReport);
-        cacheService.AddCache(cache);
+        cacheService.AddCache(cache, YearMonth.now());
     }
 }
