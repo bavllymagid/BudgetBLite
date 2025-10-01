@@ -10,20 +10,8 @@ spring:
     enabled: true
   data:
     redis:
-      host: redis
+      host: localhost
       port: 6379
-  redis:
-    host: redis
-    port: 6379
-    password:
-    database: 0
-    timeout: 2000ms
-    jedis:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
   cache:
     type: redis
     redis.time-to-live: 1800000
@@ -45,13 +33,6 @@ spring:
     listener:
       ack-mode: record
 
-  cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-
 server:
   port: 8083
 
@@ -64,5 +45,5 @@ eureka:
     fetch-registry: true
 
 host:
-  value: kafka:9092
+  value: localhost:29092
   topic: finance-events

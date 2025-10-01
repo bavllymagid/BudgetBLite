@@ -1,11 +1,9 @@
 package com.budget.b.lite.controllers;
 
-import com.budget.b.lite.entities.Expenses;
 import com.budget.b.lite.entities.Income;
 import com.budget.b.lite.services.BudgetService;
 import com.budget.b.lite.utils.dto.ExpensesDTO;
 import com.budget.b.lite.utils.dto.ExpensesRequest;
-import com.budget.b.lite.utils.dto.IncomeRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

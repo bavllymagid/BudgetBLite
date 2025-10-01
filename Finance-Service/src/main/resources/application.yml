@@ -28,5 +28,5 @@ eureka:
     fetch-registry: true
 
 host:
-  value: kafka:9092
+  value: localhost:29092
   topic: finance-events
