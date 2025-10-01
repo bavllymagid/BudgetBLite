@@ -18,7 +18,7 @@ jobs:
   # Step 1: Build all services together
   build-all-services:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,28 +34,28 @@ jobs:
         run: mvn clean package -DskipTests
 
       - name: Upload Service Discovery JAR
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: service-discovery-jar
           path: Service-Discovery/target/*.jar
           retention-days: 1
 
       - name: Upload Auth Service JAR
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: auth-service-jar
           path: Auth-Service/target/*.jar
           retention-days: 1
 
       - name: Upload Finance Service JAR
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: finance-service-jar
           path: Finance-Service/target/*.jar
           retention-days: 1
 
       - name: Upload Reporting Service JAR
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: reporting-service-jar
           path: Reporting-Service/target/*.jar
@@ -84,13 +84,13 @@ jobs:
             path: Reporting-Service
             artifact: reporting-service-jar
             port: 8083
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Download JAR artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.service.artifact }}
           path: ${{ matrix.service.path }}/target
