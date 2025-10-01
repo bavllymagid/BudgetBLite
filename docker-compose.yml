@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -9,7 +8,8 @@ services:
     ports:
       - "2181:2181"
     networks:
-      - budget
+      - budget-network
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.6.1
@@ -27,22 +27,128 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
-      - budget
+      - budget-network
+    restart: unless-stopped
+
   redis:
     image: redis:7.4-alpine
     container_name: redis
-    restart: always
     ports:
       - "6379:6379"
-    command: [ "redis-server", "--appendonly", "yes" ] # persistence enabled
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
     networks:
-      - budget
+      - budget-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: budget_db
+      POSTGRES_USER: ${POSTGRES_USER:-budget_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - budget-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budget_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  service-discovery:
+    image: ${DOCKER_USERNAME:-bvm4}/budget-service-discovery:latest
+    container_name: discover
+    ports:
+      - "8761:8761"
+    networks:
+      - budget-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  auth-service:
+    image: ${DOCKER_USERNAME:-bvm4}/budget-auth-service:latest
+    container_name: auth-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-discovery:
+        condition: service_started
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/budget_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-budget_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka/
+    networks:
+      - budget-network
+    restart: unless-stopped
+
+  finance-service:
+    image: ${DOCKER_USERNAME:-bvm4}/budget-finance-service:latest
+    container_name: finance-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      service-discovery:
+        condition: service_started
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/budget_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-budget_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka/
+      HOST_VALUE: kafka:9092
+      HOST_TOPIC: finance-events
+    networks:
+      - budget-network
+    restart: unless-stopped
+
+  reporting-service:
+    image: ${DOCKER_USERNAME:-bvm4}/budget-reporting-service:latest
+    container_name: reporting-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
+      service-discovery:
+        condition: service_started
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/budget_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-budget_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka/
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      HOST_VALUE: kafka:9092
+      HOST_TOPIC: finance-events
+    networks:
+      - budget-network
+    restart: unless-stopped
 
 volumes:
   redis_data:
+  postgres_data:
 
 networks:
-  budget:
+  budget-network:
     driver: bridge
