@@ -32,10 +32,6 @@ public class RestTemplateConfig {
 
             return execution.execute(request, body);
         });
-
-        // Don't set a custom error handler - let RestTemplate throw exceptions for HTTP errors
-        // This allows proper handling of 4xx and 5xx responses
-
         return template;
     }
 }

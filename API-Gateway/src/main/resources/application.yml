@@ -5,22 +5,11 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-  cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-    loadbalancer:
-      ribbon:
-        enabled: false
+
 
 server:
   port: 8080
 
-# Service URLs - Add the user.acc property for the authentication filter
-user:
-  acc: http://AUTH-SERVICE
 
 # Fixed service URLs (removed trailing slashes and fixed spacing)
 services:
