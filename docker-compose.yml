@@ -10,12 +10,18 @@ services:
     networks:
       - budget-network
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -29,6 +35,12 @@ services:
     networks:
       - budget-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/9092' || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
 
   redis:
     image: redis:7.4-alpine
@@ -41,6 +53,11 @@ services:
     networks:
       - budget-network
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   service-discovery:
     image: ${DOCKER_USERNAME:-bvm4}/service-discovery:latest
@@ -101,9 +118,9 @@ services:
     restart: unless-stopped
     depends_on:
       service-discovery:
-        condition: service_healthy
+        condition: service_started
       kafka:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 30s
@@ -133,11 +150,11 @@ services:
     restart: unless-stopped
     depends_on:
       service-discovery:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
       kafka:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
       interval: 30s
@@ -163,13 +180,13 @@ services:
       - budget-network
     depends_on:
       service-discovery:
-        condition: service_healthy
+        condition: service_started
       auth-service:
-        condition: service_healthy
+        condition: service_started
       finance-service:
-        condition: service_healthy
+        condition: service_started
       reporting-service:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${API_GATEWAY_PORT:-8080}/actuator/health"]
       interval: 30s
