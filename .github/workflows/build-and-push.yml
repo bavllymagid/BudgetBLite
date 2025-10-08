@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true # Changed to true to cancel redundant runs
 
     strategy:
       matrix:
@@ -41,20 +41,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 24
+      - name: Set up JDK 21 (Recommended LTS)
         uses: actions/setup-java@v4
         with:
-          java-version: '24'
+          # Using Java 21 LTS for stability, replacing Java 24
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
       - name: 🏗️ Build and install common modules
+        # This step is critical to make the service builds succeed.
         run: |
           echo "Building and installing shared modules..."
           mvn clean install -DskipTests -f common-auth-gate/pom.xml
           mvn clean install -DskipTests -f common-budget/pom.xml
 
-      - name: Build ${{ matrix.service.name }}
+      - name: Build ${{ matrix.service.name }} package
         run: |
           cd ${{ matrix.service.path }}
           mvn clean package -DskipTests
@@ -71,22 +73,28 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata
+      - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}
           tags: |
+            # Set 'latest' only for the main branch (or whatever the default branch is)
             type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix={{branch}}-
+            # Use branch name for feature/develop pushes (e.g., develop)
             type=ref,event=branch
+            # Use PR number for pull requests (e.g., pr-123)
             type=ref,event=pr
+            # Add short commit SHA tag for unique traceability
+            type=sha,format=short
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
+          # 'context' is the directory where the build runs (e.g., Service-Discovery/)
           context: ${{ matrix.service.path }}
-          file: ${{ matrix.service.path }}/Dockerfile
+          # FIX: 'file' is relative to the 'context' path. It should just be 'Dockerfile'.
+          file: Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -96,6 +104,7 @@ jobs:
   verify:
     needs: build-and-push
     runs-on: ubuntu-latest
+    # Only verify and post summary if pushed to the 'main' branch
     if: github.ref == 'refs/heads/main'
 
     steps:
@@ -118,6 +127,8 @@ jobs:
       - name: Build summary
         run: |
           echo "### 🚀 Docker Images Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All images tagged with \`latest\` are available on Docker Hub." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Image |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
