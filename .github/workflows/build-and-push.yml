@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true # Changed to true to cancel redundant runs
+      cancel-in-progress: false
 
     strategy:
       matrix:
@@ -91,9 +91,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          # 'context' is the directory where the build runs (e.g., Service-Discovery/)
           context: ${{ matrix.service.path }}
-          # FIX: 'file' is relative to the 'context' path. It should just be 'Dockerfile'.
           file: Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -104,7 +102,6 @@ jobs:
   verify:
     needs: build-and-push
     runs-on: ubuntu-latest
-    # Only verify and post summary if pushed to the 'main' branch
     if: github.ref == 'refs/heads/main'
 
     steps:
