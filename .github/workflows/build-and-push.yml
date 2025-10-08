@@ -48,6 +48,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: 🏗️ Build and install common modules
+        run: |
+          echo "Building and installing shared modules..."
+          mvn clean install -DskipTests -f common-auth-gate/pom.xml
+          mvn clean install -DskipTests -f common-budget/pom.xml
+
       - name: Build ${{ matrix.service.name }}
         run: |
           cd ${{ matrix.service.path }}
