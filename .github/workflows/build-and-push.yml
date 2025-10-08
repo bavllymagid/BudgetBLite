@@ -52,7 +52,11 @@ jobs:
       - name: 🏗️ Build and install common modules
         # This step is critical to make the service builds succeed.
         run: |
-          echo "Building and installing shared modules..."
+          echo "Installing root POM and shared modules..."
+          # 1. Install the root POM artifact itself non-recursively (-N)
+          mvn install -DskipTests -N
+          
+          # 2. Install the specific common modules needed by the matrix services
           mvn clean install -DskipTests -f common-auth-gate/pom.xml
           mvn clean install -DskipTests -f common-budget/pom.xml
 
