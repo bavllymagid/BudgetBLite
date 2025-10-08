@@ -1,4 +1,4 @@
-name: Build and Push to Docker Hub
+name: Build and Push Docker Images
 
 on:
   push:
@@ -10,14 +10,27 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
 jobs:
-  # Step 1: Build all services together
-  build-all-services:
+  build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: service-discovery
+            path: Service-Discovery
+            port: 8761
+          - name: auth-service
+            path: Auth-Service
+            port: 8081
+          - name: finance-service
+            path: Finance-Service
+            port: 8082
+          - name: reporting-service
+            path: Reporting-Service
+            port: 8083
+          - name: api-gateway
+            path: API-Gateway
+            port: 8080
 
     steps:
       - name: Checkout code
@@ -30,70 +43,10 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build entire project (including common modules)
-        run: mvn clean package -DskipTests
-
-      - name: Upload Service Discovery JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: service-discovery-jar
-          path: Service-Discovery/target/*.jar
-          retention-days: 1
-
-      - name: Upload Auth Service JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: auth-service-jar
-          path: Auth-Service/target/*.jar
-          retention-days: 1
-
-      - name: Upload Finance Service JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: finance-service-jar
-          path: Finance-Service/target/*.jar
-          retention-days: 1
-
-      - name: Upload Reporting Service JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: reporting-service-jar
-          path: Reporting-Service/target/*.jar
-          retention-days: 1
-
-  # Step 2: Build and push Docker images in parallel
-  docker-build-push:
-    needs: build-all-services
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service:
-          - name: service-discovery
-            path: Service-Discovery
-            artifact: service-discovery-jar
-            port: 8761
-          - name: auth-service
-            path: Auth-Service
-            artifact: auth-service-jar
-            port: 8081
-          - name: finance-service
-            path: Finance-Service
-            artifact: finance-service-jar
-            port: 8082
-          - name: reporting-service
-            path: Reporting-Service
-            artifact: reporting-service-jar
-            port: 8083
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.service.artifact }}
-          path: ${{ matrix.service.path }}/target
+      - name: Build ${{ matrix.service.name }}
+        run: |
+          cd ${{ matrix.service.path }}
+          mvn clean package -DskipTests
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -104,16 +57,16 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata (tags, labels)
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/budget-${{ matrix.service.name }}
+          images: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}
           tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-
             type=ref,event=branch
             type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -123,14 +76,14 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/budget-${{ matrix.service.name }}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/budget-${{ matrix.service.name }}:buildcache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-  # Step 3: Verify deployment
-  verify-images:
-    needs: docker-build-push
+  verify:
+    needs: build-and-push
     runs-on: ubuntu-latest
-    
+    if: github.ref == 'refs/heads/main'
+
     steps:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -138,36 +91,24 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Verify images exist
+      - name: Verify all images
         run: |
           echo "✅ Verifying Docker images..."
-          docker pull ${{ secrets.DOCKER_USERNAME }}/budget-service-discovery:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/budget-auth-service:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/budget-finance-service:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/budget-reporting-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/service-discovery:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/finance-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/reporting-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
           echo "✅ All images verified successfully!"
 
-  # Step 4: Notification
-  notify:
-    needs: [build-all-services, docker-build-push, verify-images]
-    runs-on: ubuntu-latest
-    if: always()
-    
-    steps:
-      - name: Build Status
+      - name: Build summary
         run: |
-          if [ "${{ needs.build-all-services.result }}" == "success" ] && \
-             [ "${{ needs.docker-build-push.result }}" == "success" ] && \
-             [ "${{ needs.verify-images.result }}" == "success" ]; then
-            echo "✅ BUILD SUCCESSFUL!"
-            echo "📦 All services built and pushed to Docker Hub"
-            echo "🚀 Images available at:"
-            echo "   - ${{ secrets.DOCKER_USERNAME }}/budget-service-discovery:latest"
-            echo "   - ${{ secrets.DOCKER_USERNAME }}/budget-auth-service:latest"
-            echo "   - ${{ secrets.DOCKER_USERNAME }}/budget-finance-service:latest"
-            echo "   - ${{ secrets.DOCKER_USERNAME }}/budget-reporting-service:latest"
-          else
-            echo "❌ BUILD FAILED!"
-            echo "Check the logs above for details"
-            exit 1
-          fi
+          echo "### 🚀 Docker Images Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Image |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Service Discovery | \`${{ secrets.DOCKER_USERNAME }}/service-discovery:latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Auth Service | \`${{ secrets.DOCKER_USERNAME }}/auth-service:latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Finance Service | \`${{ secrets.DOCKER_USERNAME }}/finance-service:latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Reporting Service | \`${{ secrets.DOCKER_USERNAME }}/reporting-service:latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Gateway | \`${{ secrets.DOCKER_USERNAME }}/api-gateway:latest\` |" >> $GITHUB_STEP_SUMMARY

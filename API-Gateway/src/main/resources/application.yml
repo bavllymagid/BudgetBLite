@@ -8,30 +8,30 @@ spring:
 
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 
-# Fixed service URLs (removed trailing slashes and fixed spacing)
 services:
   auth:
     name: AUTH-SERVICE
-    url: http://AUTH-SERVICE
+    url: ${SERVICES_AUTH_URL:http://AUTH-SERVICE}
   finance:
     name: FINANCE-SERVICE
-    url: http://FINANCE-SERVICE
+    url: ${SERVICES_FINANCE_URL:http://FINANCE-SERVICE}
   report:
     name: REPORTING-SERVICE
-    url: http://REPORTING-SERVICE
+    url: ${SERVICES_REPORT_URL:http://REPORTING-SERVICE}
 
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${DEFAULT_ZONE:http://localhost:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS:true}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
     instance-id: ${spring.application.name}:${server.port}
 
 # Logging for debugging

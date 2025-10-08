@@ -42,112 +42,142 @@ services:
       - budget-network
     restart: unless-stopped
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: postgres
-    environment:
-      POSTGRES_DB: budget_db
-      POSTGRES_USER: ${POSTGRES_USER:-budget_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - budget-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U budget_user"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   service-discovery:
-    image: ${DOCKER_USERNAME:-bvm4}/budget-service-discovery:latest
-    container_name: discover
+    image: ${DOCKER_USERNAME:-bvm4}/service-discovery:latest
+    container_name: service-discovery
     ports:
       - "8761:8761"
+    environment:
+      - PORT=8761
     networks:
       - budget-network
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
 
   auth-service:
-    image: ${DOCKER_USERNAME:-bvm4}/budget-auth-service:latest
+    image: ${DOCKER_USERNAME:-bvm4}/auth-service:latest
     container_name: auth-service
-    depends_on:
-      postgres:
-        condition: service_healthy
-      service-discovery:
-        condition: service_started
-    ports:
-      - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/budget_db
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-budget_user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka/
+      - PORT=8081
+      - DEFAULT_ZONE=http://service-discovery:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - EUREKA_INSTANCE_HOSTNAME=auth-service
+      # Database configuration
+      - DB_URL=${DB_URL:-jdbc:postgresql://dpg-d35vr2qli9vc738ptucg-a.frankfurt-postgres.render.com/employees_db_54tp}
+      - DB_USERNAME=${DB_USERNAME:-bvm}
+      - DB_PASSWORD=${DB_PASSWORD:-gk7I712z3feW7jEUxghf4UQM4Z6otDID}
     networks:
       - budget-network
     restart: unless-stopped
+    depends_on:
+      service-discovery:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   finance-service:
-    image: ${DOCKER_USERNAME:-bvm4}/budget-finance-service:latest
+    image: ${DOCKER_USERNAME:-bvm4}/finance-service:latest
     container_name: finance-service
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-      service-discovery:
-        condition: service_started
-    ports:
-      - "8082:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/budget_db
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-budget_user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka/
-      HOST_VALUE: kafka:9092
-      HOST_TOPIC: finance-events
+      - PORT=8082
+      - DEFAULT_ZONE=http://service-discovery:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - EUREKA_INSTANCE_HOSTNAME=finance-service
+      # Database configuration
+      - DB_URL=${DB_URL:-jdbc:postgresql://dpg-d35vr2qli9vc738ptucg-a.frankfurt-postgres.render.com/employees_db_54tp}
+      - DB_USERNAME=${DB_USERNAME:-bvm}
+      - DB_PASSWORD=${DB_PASSWORD:-gk7I712z3feW7jEUxghf4UQM4Z6otDID}
+      # Kafka configuration
+      - KAFKA_HOST=kafka:29092
+      - KAFKA_TOPIC=finance-events
     networks:
       - budget-network
     restart: unless-stopped
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   reporting-service:
-    image: ${DOCKER_USERNAME:-bvm4}/budget-reporting-service:latest
+    image: ${DOCKER_USERNAME:-bvm4}/reporting-service:latest
     container_name: reporting-service
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-      redis:
-        condition: service_started
-      service-discovery:
-        condition: service_started
-    ports:
-      - "8083:8083"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/budget_db
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-budget_user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-budget_pass}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-discovery:8761/eureka/
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      HOST_VALUE: kafka:9092
-      HOST_TOPIC: finance-events
+      - PORT=8083
+      - DEFAULT_ZONE=http://service-discovery:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - EUREKA_INSTANCE_HOSTNAME=reporting-service
+      # Database configuration
+      - DB_URL=${DB_URL:-jdbc:postgresql://dpg-d35vr2qli9vc738ptucg-a.frankfurt-postgres.render.com/employees_db_54tp}
+      - DB_USERNAME=${DB_USERNAME:-bvm}
+      - DB_PASSWORD=${DB_PASSWORD:-gk7I712z3feW7jEUxghf4UQM4Z6otDID}
+      # Redis configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Kafka configuration
+      - KAFKA_HOST=kafka:29092
+      - KAFKA_TOPIC=finance-events
     networks:
       - budget-network
     restart: unless-stopped
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api-gateway:
+    image: ${DOCKER_USERNAME:-bvm4}/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "${API_GATEWAY_PORT:-8080}:${API_GATEWAY_PORT:-8080}"
+    environment:
+      - SPRING_APPLICATION_NAME=API-Gateway
+      - PORT=${API_GATEWAY_PORT:-8080}
+      - DEFAULT_ZONE=http://service-discovery:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - EUREKA_INSTANCE_HOSTNAME=api-gateway
+      # Service URLs (resolved via Eureka)
+      - SERVICES_AUTH_URL=http://auth-service
+      - SERVICES_FINANCE_URL=http://finance-service
+      - SERVICES_REPORT_URL=http://reporting-service
+    networks:
+      - budget-network
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      finance-service:
+        condition: service_healthy
+      reporting-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${API_GATEWAY_PORT:-8080}/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   redis_data:
-  postgres_data:
 
 networks:
   budget-network:

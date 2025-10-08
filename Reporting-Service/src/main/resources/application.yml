@@ -2,30 +2,34 @@ spring:
   application:
     name: Reporting-Service
   datasource:
-    url: jdbc:postgresql://dpg-d35vr2qli9vc738ptucg-a.frankfurt-postgres.render.com/employees_db_54tp
-    username: bvm
-    password: gk7I712z3feW7jEUxghf4UQM4Z6otDID
+    url: ${DB_URL:jdbc:postgresql://dpg-d35vr2qli9vc738ptucg-a.frankfurt-postgres.render.com/employees_db_54tp}
+    username: ${DB_USERNAME:bvm}
+    password: ${DB_PASSWORD:gk7I712z3feW7jEUxghf4UQM4Z6otDID}
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.xml
     enabled: true
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   cache:
     type: redis
 
 server:
-  port: 8083
+  port: ${PORT:8081}
 
 
 eureka:
   client:
     service-url:
-      defaultZone: http://discover:8761/eureka/
+      defaultZone: ${DEFAULT_ZONE:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    prefer-ip-address: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS:true}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    instance-id: ${spring.application.name}:${server.port}
 
 host:
-  value: localhost:29092
-  topic: finance-events
+  value: ${KAFKA_HOST:localhost:29092}
+  topic: ${KAFKA_TOPIC:finance-events}
